@@ -1,10 +1,10 @@
 /**:
   ros__parameters:
-    wheel_base: 3.0
+    overhang: [0.2, 0.4, 0.1, 0.1] # front, rear, left, right
+    height: 1.0
     wheel_tread: 1.5
+    wheel_base: 2.8
     mass: 1500.0
-    overhang: [1.0, 1.1, 0.1, 0.1] # front, rear, left, right
-    height: 2.5
     max_speed: 10.0 # 36.0 [km/h]
     max_accel: 5.0
     max_brake: 2.0

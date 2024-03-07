@@ -36,6 +36,11 @@ Kinematics::Kinematics(const VehicleSpecs & specs)
   state_.steer = 0.0;
 }
 
+VehicleSpecs Kinematics::specs() const
+{
+  return specs_;
+}
+
 Gear Kinematics::gear() const
 {
   return state_.gear;

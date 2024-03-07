@@ -15,6 +15,7 @@
 #include "simulator.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace autoware_practice_simulator
 {
@@ -24,6 +25,13 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
   // Init kinematics.
   {
     VehicleSpecs specs;
+    const auto overhang = declare_parameter<std::vector<double>>("overhang");
+    if (overhang.size() != specs.overhang.size()) {
+      throw std::invalid_argument("overhang size should be " + std::to_string(specs.overhang.size()));
+    }
+    std::copy_n(overhang.begin(), specs.overhang.size(), specs.overhang.begin());
+    specs.height = declare_parameter<double>("height");
+    specs.wheel_tread = declare_parameter<double>("wheel_tread");
     specs.wheel_base = declare_parameter<double>("wheel_base");
     specs.mass = declare_parameter<double>("mass");
     specs.max_speed = declare_parameter<double>("max_speed");
@@ -94,63 +102,85 @@ void Simulator::on_timer()
     tf_broadcaster_->sendTransform(tf);
   }
 
-  PoseStamped pose;
-  pose.header.stamp = stamp;
-  pose.header.frame_id = "map";
-  pose.pose = kinematics_->pose();
-  pub_pose_->publish(pose);
-
-  VelocityReport velocity;
-  velocity.header.stamp = stamp;
-  velocity.header.frame_id = "base_link";
-  velocity.longitudinal_velocity = kinematics_->speed();
-  pub_velocity_->publish(velocity);
-
-  SteeringReport steering;
-  steering.stamp = stamp;
-  steering.steering_tire_angle = kinematics_->steer();
-  pub_steering_->publish(steering);
-
-  const auto convert_gear = [](const Gear & gear)
+  // Vehicle pose.
   {
-    switch (gear) {
-      case Gear::Parking:
-        return GearReport::PARK;
-      case Gear::Neutral:
-        return GearReport::NEUTRAL;
-      case Gear::Drive:
-        return GearReport::DRIVE;
-      case Gear::Reverse:
-        return GearReport::REVERSE;
-      default:
-        return GearReport::NONE;
-    }
-  };
+    PoseStamped pose;
+    pose.header.stamp = stamp;
+    pose.header.frame_id = "map";
+    pose.pose = kinematics_->pose();
+    pub_pose_->publish(pose);
+  }
 
-  GearReport gear;
-  gear.stamp = stamp;
-  gear.report = convert_gear(kinematics_->gear());
-  pub_gear_->publish(gear);
+  // Velocity report.
+  {
+    VelocityReport velocity;
+    velocity.header.stamp = stamp;
+    velocity.header.frame_id = "base_link";
+    velocity.longitudinal_velocity = kinematics_->speed();
+    pub_velocity_->publish(velocity);
+  }
 
-  Marker marker;
-  marker.header.stamp = stamp;
-  marker.header.frame_id = "sim_base_link";
-  marker.ns = "vehicle";
-  marker.id = 0;
-  marker.action = Marker::ADD;
-  marker.type = Marker::CUBE;
-  marker.pose.position.x = 1.4;
-  marker.pose.orientation.w = 1.0;
-  marker.scale.x = 2.8;
-  marker.scale.y = 1.5;
-  marker.color.a = 1.0;
-  marker.color.r = 0.7;
-  marker.color.g = 0.7;
-  marker.color.b = 0.7;
+  // Steering report.
+  {
+    SteeringReport steering;
+    steering.stamp = stamp;
+    steering.steering_tire_angle = kinematics_->steer();
+    pub_steering_->publish(steering);
+  }
 
-  MarkerArray markers;
-  markers.markers.push_back(marker);
-  pub_markers_->publish(markers);
+  // Gear report.
+  {
+    const auto convert_gear = [](const Gear & gear)
+    {
+      switch (gear) {
+        case Gear::Parking:
+          return GearReport::PARK;
+        case Gear::Neutral:
+          return GearReport::NEUTRAL;
+        case Gear::Drive:
+          return GearReport::DRIVE;
+        case Gear::Reverse:
+          return GearReport::REVERSE;
+        default:
+          return GearReport::NONE;
+      }
+    };
+
+    GearReport gear;
+    gear.stamp = stamp;
+    gear.report = convert_gear(kinematics_->gear());
+    pub_gear_->publish(gear);
+  }
+
+  // Vehicle markers.
+  {
+    const auto specs = kinematics_->specs();
+    const auto base_x = specs.overhang[0] + specs.wheel_base;
+    const auto full_x = specs.overhang[0] + specs.overhang[1] + specs.wheel_base;
+    const auto full_y = specs.overhang[2] + specs.overhang[3] + specs.wheel_tread;
+
+    Marker marker;
+    marker.header.stamp = stamp;
+    marker.header.frame_id = "sim_base_link";
+    marker.ns = "vehicle";
+    marker.id = 0;
+    marker.action = Marker::ADD;
+    marker.type = Marker::CUBE;
+    marker.pose.position.x = base_x / 2.0;
+    marker.pose.position.z = specs.height / 2.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = full_x;
+    marker.scale.y = full_y;
+    marker.scale.z = specs.height;
+    marker.color.a = 1.0;
+    marker.color.r = 0.7;
+    marker.color.g = 0.7;
+    marker.color.b = 0.7;
+
+    MarkerArray markers;
+    markers.markers.push_back(marker);
+    pub_markers_->publish(markers);
+  }
 }
 
 }  // namespace autoware_practice_simulator

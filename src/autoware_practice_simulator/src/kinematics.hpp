@@ -17,6 +17,8 @@
 
 #include "geometry.hpp"
 
+#include <array>
+
 namespace autoware_practice_simulator
 {
 
@@ -41,6 +43,9 @@ struct VehicleInput
 
 struct VehicleSpecs
 {
+  std::array<double, 4> overhang;
+  double height;
+  double wheel_tread;
   double wheel_base;
   double mass;
   double max_speed;
@@ -54,6 +59,7 @@ class Kinematics
 public:
   explicit Kinematics(const VehicleSpecs & specs);
 
+  VehicleSpecs specs() const;
   Gear gear() const;
   Pose pose() const;
   double speed() const;
