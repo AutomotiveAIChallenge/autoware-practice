@@ -1,3 +1,7 @@
+# colcon build directories
 /build
 /install
 /log
+
+# dependent repositories
+/src/interfaces
