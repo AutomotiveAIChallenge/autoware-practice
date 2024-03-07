@@ -41,7 +41,7 @@ struct VehicleInput
 
 struct VehicleSpecs
 {
-  double wheelbase;
+  double wheel_base;
   double mass;
   double max_speed;
   double max_accel;

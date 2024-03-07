@@ -115,7 +115,7 @@ void Kinematics::update_point(double dt)
     angle_delta = 0.0;
     point_delta = Point2{state_.speed * dt, 0.0};
   } else {
-    const auto radius = specs_.wheelbase / std::tan(state_.steer);
+    const auto radius = specs_.wheel_base / std::tan(state_.steer);
     angle_delta = state_.speed * dt / radius;
     point_delta = Point2{radius, 0.0}.rotate(angle_delta);
     point_delta = Point2{point_delta.y, radius - point_delta.x};
