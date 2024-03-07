@@ -1,0 +1,4 @@
+<launch>
+  <include file="$(find-pkg-share autoware_practice_launch)/launch/rviz.launch.xml"/>
+  <include file="$(find-pkg-share autoware_practice_simulator)/launch/simulator.launch.xml"/>
+</launch>
