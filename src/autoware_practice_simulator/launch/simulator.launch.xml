@@ -1,0 +1,6 @@
+<launch>
+  <arg name="spec_file" default="$(find-pkg-share autoware_practice_simulator)/config/vehicle.param.yaml"/>
+  <node pkg="autoware_practice_simulator" exec="simulator" name="simulator">
+    <param from="$(var spec_file)"/>
+  </node>
+</launch>

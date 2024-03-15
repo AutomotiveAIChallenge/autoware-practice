@@ -1,0 +1,4 @@
+<launch>
+  <arg name="rviz_config" default="$(find-pkg-share autoware_practice_launch)/config/autoware.rviz"/>
+  <node pkg="rviz2" exec="rviz2" args="-d $(var rviz_config)"/>
+</launch>
