@@ -38,123 +38,77 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
     specs.max_accel = declare_parameter<double>("max_accel");
     specs.max_brake = declare_parameter<double>("max_brake");
     specs.max_steer = declare_parameter<double>("max_steer");
-    kinematics_.emplace(specs);
+    kinematics_ = std::make_unique<VehicleKinematics>(specs);
+  }
+
+  // Init controller.
+  {
+    controller_ = std::make_unique<VehicleController>(*this);
   }
 
   // Init ROS interface.
   {
-    using std::placeholders::_1;
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-
-    sub_control_ = create_subscription<AckermannControlCommand>("~/command/control", rclcpp::QoS(1), std::bind(&Simulator::on_command, this, _1));
-    sub_gear_ = create_subscription<GearCommand>("~/command/gear", rclcpp::QoS(1), std::bind(&Simulator::on_gear, this, _1));
-
     pub_pose_ = create_publisher<PoseStamped>("~/status/pose", rclcpp::QoS(1));
-    pub_velocity_ = create_publisher<VelocityReport>("~/status/velocity", rclcpp::QoS(1));
-    pub_steering_ = create_publisher<SteeringReport>("~/status/steering", rclcpp::QoS(1));
-    pub_gear_ = create_publisher<GearReport>("~/status/gear", rclcpp::QoS(1));
     pub_markers_ = create_publisher<MarkerArray>("~/markers", rclcpp::QoS(1));
+  }
 
-    const auto period = rclcpp::Rate(10).period();
-    timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
+  // Init simulation timer.
+  {
+    rate_sim_ = 20.0;
+    rate_pub_ = 10.0;
+    timer_sim_ = rclcpp::create_timer(this, get_clock(), rclcpp::Rate(rate_sim_).period(), [this] { on_timer_sim(); });
+    timer_pub_ = rclcpp::create_timer(this, get_clock(), rclcpp::Rate(rate_pub_).period(), [this] { on_timer_pub(); });
   }
 }
 
-void Simulator::on_command(const AckermannControlCommand & msg)
+void Simulator::on_timer_sim()
 {
-  VehicleInput input;
-  input.accel = msg.longitudinal.acceleration;
-  input.steer = msg.lateral.steering_tire_angle;
-  kinematics_->update_input(input);
+  const auto dt = 1.0 / rate_sim_;
+  controller_->update(dt, kinematics_->state());
+  kinematics_->update(dt, controller_->input());
 }
 
-void Simulator::on_gear(const GearCommand & msg)
-{
-  if (msg.command == GearCommand::PARK) {
-    return kinematics_->update_gear(Gear::Parking);
-  }
-  if (msg.command == GearCommand::DRIVE) {
-    return kinematics_->update_gear(Gear::Drive);
-  }
-  if (msg.command == GearCommand::REVERSE) {
-    return kinematics_->update_gear(Gear::Reverse);
-  }
-  if (msg.command == GearCommand::NEUTRAL) {
-    return kinematics_->update_gear(Gear::Neutral);
-  }
-}
-
-void Simulator::on_timer()
+void Simulator::on_timer_pub()
 {
   const auto stamp = now();
-  kinematics_->update_state(0.1);
+  publish(stamp);
+  controller_->publish(stamp);
+}
 
+void Simulator::publish(const rclcpp::Time & stamp)
+{
+  const auto specs = kinematics_->specs();
+  const auto state = kinematics_->state();
+  const auto quaternion = yaw_to_quaternion(state.angle);
+
+  // Vehicle pose transform.
   {
-    const auto pose = kinematics_->pose();
-    TransformStamped tf;
-    tf.header.stamp = stamp;
-    tf.header.frame_id = "map";
-    tf.child_frame_id = "sim_base_link";
-    tf.transform.translation.x = pose.position.x;
-    tf.transform.translation.y = pose.position.y;
-    tf.transform.translation.z = pose.position.z;
-    tf.transform.rotation = pose.orientation;
-    tf_broadcaster_->sendTransform(tf);
+    TransformStamped msg;
+    msg.header.stamp = stamp;
+    msg.header.frame_id = "map";
+    msg.child_frame_id = "sim_base_link";
+    msg.transform.translation.x = state.point.x;
+    msg.transform.translation.y = state.point.y;
+    msg.transform.translation.z = 0.0;
+    msg.transform.rotation = quaternion;
+    tf_broadcaster_->sendTransform(msg);
   }
 
   // Vehicle pose.
   {
-    PoseStamped pose;
-    pose.header.stamp = stamp;
-    pose.header.frame_id = "map";
-    pose.pose = kinematics_->pose();
-    pub_pose_->publish(pose);
-  }
-
-  // Velocity report.
-  {
-    VelocityReport velocity;
-    velocity.header.stamp = stamp;
-    velocity.header.frame_id = "base_link";
-    velocity.longitudinal_velocity = kinematics_->speed();
-    pub_velocity_->publish(velocity);
-  }
-
-  // Steering report.
-  {
-    SteeringReport steering;
-    steering.stamp = stamp;
-    steering.steering_tire_angle = kinematics_->steer();
-    pub_steering_->publish(steering);
-  }
-
-  // Gear report.
-  {
-    const auto convert_gear = [](const Gear & gear)
-    {
-      switch (gear) {
-        case Gear::Parking:
-          return GearReport::PARK;
-        case Gear::Neutral:
-          return GearReport::NEUTRAL;
-        case Gear::Drive:
-          return GearReport::DRIVE;
-        case Gear::Reverse:
-          return GearReport::REVERSE;
-        default:
-          return GearReport::NONE;
-      }
-    };
-
-    GearReport gear;
-    gear.stamp = stamp;
-    gear.report = convert_gear(kinematics_->gear());
-    pub_gear_->publish(gear);
+    PoseStamped msg;
+    msg.header.stamp = stamp;
+    msg.header.frame_id = "map";
+    msg.pose.position.x = state.point.x;
+    msg.pose.position.y = state.point.y;
+    msg.pose.position.z = 0.0;
+    msg.pose.orientation = quaternion;
+    pub_pose_->publish(msg);
   }
 
   // Vehicle markers.
   {
-    const auto specs = kinematics_->specs();
     const auto base_x = specs.overhang[0] + specs.wheel_base;
     const auto full_x = specs.overhang[0] + specs.overhang[1] + specs.wheel_base;
     const auto full_y = specs.overhang[2] + specs.overhang[3] + specs.wheel_tread;
@@ -173,7 +127,7 @@ void Simulator::on_timer()
     marker.scale.y = full_y;
     marker.scale.z = specs.height;
     marker.color.a = 1.0;
-    marker.color.r = 0.7;
+    marker.color.r = 0.5;
     marker.color.g = 0.7;
     marker.color.b = 0.7;
 

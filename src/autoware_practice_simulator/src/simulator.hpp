@@ -15,31 +15,20 @@
 #ifndef SIMULATOR_HPP_
 #define SIMULATOR_HPP_
 
-#include "geometry.hpp"
+#include "controller.hpp"
 #include "kinematics.hpp"
 
 #include <rclcpp/rclcpp.hpp>
-#include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
-#include <autoware_auto_vehicle_msgs/msg/gear_command.hpp>
-#include <autoware_auto_vehicle_msgs/msg/gear_report.hpp>
-#include <autoware_auto_vehicle_msgs/msg/steering_report.hpp>
-#include <autoware_auto_vehicle_msgs/msg/velocity_report.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <memory>
-#include <optional>
 
 namespace autoware_practice_simulator
 {
 
-using autoware_auto_control_msgs::msg::AckermannControlCommand;
-using autoware_auto_vehicle_msgs::msg::GearCommand;
-using autoware_auto_vehicle_msgs::msg::GearReport;
-using autoware_auto_vehicle_msgs::msg::SteeringReport;
-using autoware_auto_vehicle_msgs::msg::VelocityReport;
 using visualization_msgs::msg::Marker;
 using visualization_msgs::msg::MarkerArray;
 
@@ -49,20 +38,20 @@ public:
   explicit Simulator(const rclcpp::NodeOptions & options);
 
 private:
-  void on_command(const AckermannControlCommand & msg);
-  void on_gear(const GearCommand & msg);
-  void on_timer();
+  void on_timer_sim();
+  void on_timer_pub();
+  void publish(const rclcpp::Time & stamp);
 
-  std::optional<Kinematics> kinematics_;
+  std::unique_ptr<VehicleKinematics> kinematics_;
+  std::unique_ptr<VehicleController> controller_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-  rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Subscription<AckermannControlCommand>::SharedPtr sub_control_;
-  rclcpp::Subscription<GearCommand>::SharedPtr sub_gear_;
+  rclcpp::TimerBase::SharedPtr timer_sim_;
+  rclcpp::TimerBase::SharedPtr timer_pub_;
   rclcpp::Publisher<PoseStamped>::SharedPtr pub_pose_;
-  rclcpp::Publisher<VelocityReport>::SharedPtr pub_velocity_;
-  rclcpp::Publisher<SteeringReport>::SharedPtr pub_steering_;
-  rclcpp::Publisher<GearReport>::SharedPtr pub_gear_;
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_markers_;
+
+  double rate_sim_;
+  double rate_pub_;
 };
 
 }  // namespace autoware_practice_simulator
