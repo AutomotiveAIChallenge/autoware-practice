@@ -1,0 +1,7 @@
+<launch>
+  <arg name="judge_file" default="$(find-pkg-share autoware_practice_evaluator)/config/sample.yaml"/>
+  <node pkg="autoware_practice_evaluator" exec="evaluator" name="evaluator">
+    <param name="judge_file" value="$(var judge_file)"/>
+    <remap from="~/pose" to="/simulator/pose"/>
+  </node>
+</launch>

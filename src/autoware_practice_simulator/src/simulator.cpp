@@ -49,7 +49,7 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
   // Init ROS interface.
   {
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-    pub_pose_ = create_publisher<PoseStamped>("~/status/pose", rclcpp::QoS(1));
+    pub_pose_ = create_publisher<PoseStamped>("~/pose", rclcpp::QoS(1));
     pub_markers_ = create_publisher<MarkerArray>("~/markers", rclcpp::QoS(1));
   }
 

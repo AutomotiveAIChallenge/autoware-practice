@@ -1,0 +1,7 @@
+<library path="autoware_practice_rviz_plugin">
+
+  <class type="autoware_practice_rviz_plugins::ResultPanel" base_class_type="rviz_common::Panel">
+    <description>ResultPanel</description>
+  </class>
+
+</library>
