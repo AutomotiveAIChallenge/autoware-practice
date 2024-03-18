@@ -55,7 +55,7 @@ void ResultPanel::onResult(const JudgeStatus & msg)
       label_result_->setStyleSheet("background-color: lime");
       break;
     default:
-      label_result_->setText("UNKNOWN");
+      label_result_->setText("INVALID");
       label_result_->setStyleSheet("background-color: gray");
       break;
   }

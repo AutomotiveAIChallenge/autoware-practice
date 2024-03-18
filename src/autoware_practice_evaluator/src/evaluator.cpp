@@ -49,7 +49,7 @@ void Evaluator::on_timer()
       case TriState::Failure: return JudgeStatus::FAILURE;
       case TriState::Judging: return JudgeStatus::JUDGING;
       case TriState::Success: return JudgeStatus::SUCCESS;
-      default:                return JudgeStatus::UNKNOWN;
+      default:                return JudgeStatus::INVALID;
     }
     // clang-format on
   };
