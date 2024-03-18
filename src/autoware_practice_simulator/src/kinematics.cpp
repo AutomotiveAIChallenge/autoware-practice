@@ -20,98 +20,41 @@
 namespace autoware_practice_simulator
 {
 
-Kinematics::Kinematics(const VehicleSpecs & specs)
+VehicleKinematics::VehicleKinematics(const VehicleSpecs & specs)
 {
   specs_ = specs;
-
-  input_.accel = 0.0;
-  input_.steer = 0.0;
-  state_.gear = Gear::Drive;
 
   state_.point = Point2{0.0, 0.0};
   state_.speed = 0.0;
   state_.accel = 0.0;
-  state_.brake = 0.0;
   state_.angle = 0.0;
   state_.steer = 0.0;
 }
 
-VehicleSpecs Kinematics::specs() const
+VehicleSpecs VehicleKinematics::specs() const
 {
   return specs_;
 }
 
-Gear Kinematics::gear() const
+VehicleState VehicleKinematics::state() const
 {
-  return state_.gear;
+  return state_;
 }
 
-Pose Kinematics::pose() const
+void VehicleKinematics::update(double dt, const VehicleInput & input)
 {
-  Pose pose;
-  pose.position.x = state_.point.x;
-  pose.position.y = state_.point.y;
-  pose.orientation = yaw_to_quaternion(state_.angle);
-  return pose;
-}
+  const auto accel = std::clamp(input.accel, -specs_.max_accel, +specs_.max_accel);
+  const auto steer = std::clamp(input.steer, -specs_.max_steer, +specs_.max_steer);
 
-double Kinematics::speed() const
-{
-  return state_.speed;
-}
+  const auto brake_sign = std::signbit(state_.speed) ? +1.0 : -1.0;
+  const auto brake_limit = std::min(specs_.max_brake, std::abs(state_.speed) / dt);
+  const auto brake = std::clamp(input.brake, 0.0, brake_limit) * brake_sign;
 
-double Kinematics::steer() const
-{
-  return state_.steer;
-}
-
-void Kinematics::update_input(const VehicleInput & input)
-{
-  input_ = input;
-}
-
-void Kinematics::update_gear(const Gear & gear)
-{
-  state_.gear = gear;
-}
-
-void Kinematics::update_state(double dt)
-{
-  switch (state_.gear) {
-    case Gear::Parking:
-      state_.accel = 0.0;
-      state_.brake = specs_.max_brake;
-      break;
-    case Gear::Neutral:
-      state_.accel = 0.0;
-      state_.brake = 0.0;
-      break;
-    case Gear::Drive:
-      state_.accel = std::max(+input_.accel, 0.0);
-      state_.brake = std::max(-input_.accel, 0.0);
-      break;
-    case Gear::Reverse:
-      state_.accel = std::max(+input_.accel, 0.0) * (-1.0);
-      state_.brake = std::max(-input_.accel, 0.0);
-      break;
-  }
-  state_.steer = input_.steer;
-
-  // brake max_brake
-  state_.accel = std::clamp(state_.accel, -specs_.max_accel, +specs_.max_accel);
-  state_.brake = std::clamp(state_.brake, -specs_.max_brake, +specs_.max_brake);
-  state_.steer = std::clamp(state_.steer, -specs_.max_steer, +specs_.max_steer);
-
-  const auto sign = std::signbit(state_.speed) ? -1.0 : +1.0;
-  state_.speed -= std::min(state_.brake * dt, std::abs(state_.speed)) * sign;
-  state_.speed += state_.accel * dt;
+  state_.accel = accel + brake;
+  state_.steer = steer;
+  state_.speed = state_.speed + (state_.accel * dt);
   state_.speed = std::clamp(state_.speed, -specs_.max_speed, +specs_.max_speed);
 
-  update_point(dt);
-}
-
-void Kinematics::update_point(double dt)
-{
   constexpr double steer_eps = 1e-3;
   double angle_delta;
   Point2 point_delta;

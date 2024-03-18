@@ -15,19 +15,21 @@
 #ifndef GEOMETRY_HPP_
 #define GEOMETRY_HPP_
 
-#include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/accel_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 namespace autoware_practice_simulator
 {
 
-using geometry_msgs::msg::Pose;
+using geometry_msgs::msg::AccelStamped;
 using geometry_msgs::msg::PoseStamped;
 using geometry_msgs::msg::Quaternion;
 using geometry_msgs::msg::TransformStamped;
+using geometry_msgs::msg::TwistStamped;
 
 constexpr double pi = 3.141592653589793;
 

@@ -15,8 +15,10 @@ ament_auto_find_build_dependencies()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/simulator.cpp
-  src/kinematics.cpp
+  src/interface.cpp
   src/geometry.cpp
+  src/kinematics.cpp
+  src/controller.cpp
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}

@@ -12,27 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KINEMATICS_HPP_
-#define KINEMATICS_HPP_
-
 #include "interface.hpp"
 
 namespace autoware_practice_simulator
 {
 
-class VehicleKinematics
-{
-public:
-  explicit VehicleKinematics(const VehicleSpecs & specs);
-  VehicleSpecs specs() const;
-  VehicleState state() const;
-  void update(double dt, const VehicleInput & input);
-
-private:
-  VehicleSpecs specs_;
-  VehicleState state_;
-};
-
 }  // namespace autoware_practice_simulator
-
-#endif  // KINEMATICS_HPP_

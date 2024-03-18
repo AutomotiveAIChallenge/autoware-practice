@@ -12,27 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef KINEMATICS_HPP_
-#define KINEMATICS_HPP_
+#ifndef INTERFACE_HPP_
+#define INTERFACE_HPP_
 
-#include "interface.hpp"
+#include "geometry.hpp"
+
+#include <array>
 
 namespace autoware_practice_simulator
 {
 
-class VehicleKinematics
+struct VehicleSpecs
 {
-public:
-  explicit VehicleKinematics(const VehicleSpecs & specs);
-  VehicleSpecs specs() const;
-  VehicleState state() const;
-  void update(double dt, const VehicleInput & input);
+  std::array<double, 4> overhang;
+  double height;
+  double wheel_tread;
+  double wheel_base;
+  double mass;
+  double max_speed;
+  double max_accel;
+  double max_brake;
+  double max_steer;
+};
 
-private:
-  VehicleSpecs specs_;
-  VehicleState state_;
+struct VehicleState
+{
+  Point2 point;
+  double speed;
+  double accel;
+  double angle;
+  double steer;
+};
+
+struct VehicleInput
+{
+  bool parking;
+  double accel;
+  double brake;
+  double steer;
 };
 
 }  // namespace autoware_practice_simulator
 
-#endif  // KINEMATICS_HPP_
+#endif  // INTERFACE_HPP_
