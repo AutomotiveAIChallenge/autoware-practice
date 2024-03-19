@@ -52,6 +52,18 @@ public:
   virtual std::vector<Condition *> children() { return {}; }
 };
 
+class LatchResult : public Condition
+{
+public:
+  explicit LatchResult(YAML::Node yaml);
+  TriState update(const JudgeInput & data) override;
+  std::vector<Condition *> children() override;
+
+private:
+  TriState latch_;
+  Condition::UniquePtr condition_;
+};
+
 class JudgeResult : public Condition
 {
 public:

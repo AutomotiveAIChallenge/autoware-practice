@@ -48,10 +48,11 @@ TriState normalize(TriState state)
 std::unique_ptr<Condition> Condition::make_unique(YAML::Node yaml)
 {
   const auto type = yaml["type"].as<std::string>();
+  if (type == "LatchResult") return std::make_unique<LatchResult>(yaml);
   if (type == "JudgeResult") return std::make_unique<JudgeResult>(yaml);
-  if (type == "LogicalAnd") return std::make_unique<LogicalAnd>(yaml);
   if (type == "SuccessArea") return std::make_unique<SuccessArea>(yaml);
   if (type == "FailureArea") return std::make_unique<FailureArea>(yaml);
+  if (type == "LogicalAnd") return std::make_unique<LogicalAnd>(yaml);
   throw std::runtime_error("unknown condition type: " + type);
 }
 
@@ -65,11 +66,37 @@ std::vector<Condition *> Condition::descendants(Condition * node)
   return result;
 }
 
+LatchResult::LatchResult(YAML::Node yaml)
+{
+  latch_ = TriState::Judging;
+  condition_ = make_unique(yaml["node"]);
+}
+
+std::vector<Condition *> LatchResult::children()
+{
+  return {condition_.get()};
+}
+
+TriState LatchResult::update(const JudgeInput & data)
+{
+  if (latch_ == TriState::Judging) latch_ = condition_->update(data);
+  return latch_;
+}
+
 JudgeResult::JudgeResult(YAML::Node yaml)
 {
   for (const auto & node : yaml["list"]) {
     conditions_.push_back(make_unique(node));
   }
+}
+
+std::vector<Condition *> JudgeResult::children()
+{
+  std::vector<Condition *> result;
+  for (const auto & condition : conditions_) {
+    result.push_back(condition.get());
+  }
+  return result;
 }
 
 TriState JudgeResult::update(const JudgeInput & data)
@@ -84,15 +111,6 @@ TriState JudgeResult::update(const JudgeInput & data)
   return normalize(result);
 }
 
-std::vector<Condition *> JudgeResult::children()
-{
-  std::vector<Condition *> result;
-  for (const auto & condition : conditions_) {
-    result.push_back(condition.get());
-  }
-  return result;
-}
-
 LogicalAnd::LogicalAnd(YAML::Node yaml)
 {
   for (const auto & node : yaml["list"]) {
@@ -100,20 +118,20 @@ LogicalAnd::LogicalAnd(YAML::Node yaml)
   }
 }
 
-TriState LogicalAnd::update(const JudgeInput & data)
-{
-  TriState result = TriState::Success;
-  for (const auto & condition : conditions_) {
-    result = std::min(result, condition->update(data));
-  }
-  return result;
-}
-
 std::vector<Condition *> LogicalAnd::children()
 {
   std::vector<Condition *> result;
   for (const auto & condition : conditions_) {
     result.push_back(condition.get());
+  }
+  return result;
+}
+
+TriState LogicalAnd::update(const JudgeInput & data)
+{
+  TriState result = TriState::Success;
+  for (const auto & condition : conditions_) {
+    result = std::min(result, condition->update(data));
   }
   return result;
 }
