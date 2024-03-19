@@ -20,7 +20,7 @@
 #include <rviz_common/panel.hpp>
 #include <autoware_practice_msgs/msg/judge_status.hpp>
 
-namespace autoware_practice_rviz_plugins
+namespace autoware_practice_visualization
 {
 
 class ResultPanel : public rviz_common::Panel
@@ -38,6 +38,6 @@ private:
   void onResult(const JudgeStatus & msg);
 };
 
-}  // namespace autoware_practice_rviz_plugins
+}  // namespace autoware_practice_visualization
 
 #endif  // RESULT_HPP_

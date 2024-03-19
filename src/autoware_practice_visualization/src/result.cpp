@@ -17,7 +17,7 @@
 #include <QGridLayout>
 #include <rviz_common/display_context.hpp>
 
-namespace autoware_practice_rviz_plugins
+namespace autoware_practice_visualization
 {
 
 ResultPanel::ResultPanel(QWidget * parent) : rviz_common::Panel(parent)
@@ -61,7 +61,7 @@ void ResultPanel::onResult(const JudgeStatus & msg)
   }
 }
 
-}  // namespace autoware_practice_rviz_plugins
+}  // namespace autoware_practice_visualization
 
 #include <pluginlib/class_list_macros.hpp>
-PLUGINLIB_EXPORT_CLASS(autoware_practice_rviz_plugins::ResultPanel, rviz_common::Panel)
+PLUGINLIB_EXPORT_CLASS(autoware_practice_visualization::ResultPanel, rviz_common::Panel)
