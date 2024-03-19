@@ -1,6 +1,9 @@
 <launch>
-  <arg name="spec_file" default="$(find-pkg-share autoware_practice_simulator)/config/vehicle.param.yaml"/>
+  <arg name="param_file" default="$(find-pkg-share autoware_practice_simulator)/config/default.param.yaml"/>
+  <arg name="specs_file" default="$(find-pkg-share autoware_practice_simulator)/config/vehicle.param.yaml"/>
   <node pkg="autoware_practice_simulator" exec="simulator" name="simulator">
-    <param from="$(var spec_file)"/>
+    <param from="$(var param_file)"/>
+    <param from="$(var specs_file)"/>
   </node>
+  <include file="$(find-pkg-share autoware_practice_simulator)/launch/vehicle.launch.xml"/>
 </launch>

@@ -1,0 +1,4 @@
+/**:
+  ros__parameters:
+    rate: 10.0
+    resolution: 60.0
