@@ -1,0 +1,16 @@
+type: LatchResult
+node:
+  type: JudgeResult
+  list:
+    - type: SuccessArea
+      area:
+        - [+50.0, +4.0]
+        - [-50.0, +4.0]
+        - [-50.0, +3.0]
+        - [+50.0, +3.0]
+    - type: SuccessArea
+      area:
+        - [+50.0, -3.0]
+        - [-50.0, -3.0]
+        - [-50.0, -4.0]
+        - [+50.0, -4.0]
