@@ -20,6 +20,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <autoware_practice_msgs/msg/judge_status.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <nav_msgs/msg/path.hpp>
 
 #include <memory>
 #include <vector>
@@ -34,13 +35,16 @@ public:
 
 private:
   using PoseStamped = geometry_msgs::msg::PoseStamped;
+  using VehiclePath = nav_msgs::msg::Path;
   using JudgeStatus = autoware_practice_msgs::msg::JudgeStatus;
 
   void on_pose(const PoseStamped & msg);
+  void on_path(const VehiclePath & msg);
   void on_timer();
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Subscription<PoseStamped>::SharedPtr sub_pose_;
+  rclcpp::Subscription<VehiclePath>::SharedPtr sub_path_;
   rclcpp::Publisher<JudgeStatus>::SharedPtr pub_result_;
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_markers_;
 
