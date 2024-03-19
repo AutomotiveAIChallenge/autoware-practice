@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(autoware_practice_rviz_plugin)
+project(autoware_practice_visualization)
 
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()

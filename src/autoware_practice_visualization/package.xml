@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>autoware_practice_rviz_plugin</name>
+  <name>autoware_practice_visualization</name>
   <version>0.0.0</version>
-  <description>The autoware_practice_rviz_plugin package</description>
+  <description>The autoware_practice_visualization package</description>
   <maintainer email="isamu.takagi@tier4.jp">Takagi, Isamu</maintainer>
   <license>Apache License 2.0</license>
 

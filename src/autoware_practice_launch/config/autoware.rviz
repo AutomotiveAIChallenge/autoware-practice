@@ -24,7 +24,7 @@ Panels:
     Name: Time
     SyncMode: 0
     SyncSource: ""
-  - Class: autoware_practice_rviz_plugins::ResultPanel
+  - Class: autoware_practice_visualization::ResultPanel
     Name: ResultPanel
 Visualization Manager:
   Class: ""
