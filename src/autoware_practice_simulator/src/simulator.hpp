@@ -19,18 +19,17 @@
 #include "kinematics.hpp"
 
 #include <rclcpp/rclcpp.hpp>
+#include <nav_msgs/msg/path.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include <tf2_ros/transform_broadcaster.h>
 
 #include <memory>
+#include <vector>
 
 namespace autoware_practice_simulator
 {
-
-using visualization_msgs::msg::Marker;
-using visualization_msgs::msg::MarkerArray;
 
 class Simulator : public rclcpp::Node
 {
@@ -38,20 +37,25 @@ public:
   explicit Simulator(const rclcpp::NodeOptions & options);
 
 private:
-  void on_timer_sim();
-  void on_timer_pub();
+  using Marker = visualization_msgs::msg::Marker;
+  using MarkerArray = visualization_msgs::msg::MarkerArray;
+  using VehiclePath = nav_msgs::msg::Path;
+
+  void on_timer();
+  void execute(const rclcpp::Time & stamp);
   void publish(const rclcpp::Time & stamp);
 
   std::unique_ptr<VehicleKinematics> kinematics_;
   std::unique_ptr<VehicleController> controller_;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-  rclcpp::TimerBase::SharedPtr timer_sim_;
-  rclcpp::TimerBase::SharedPtr timer_pub_;
-  rclcpp::Publisher<PoseStamped>::SharedPtr pub_pose_;
+  rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_markers_;
+  rclcpp::Publisher<PoseStamped>::SharedPtr pub_pose_;
+  rclcpp::Publisher<VehiclePath>::SharedPtr pub_path_;
+  rclcpp::Time last_time_;
+  double time_resolution_;
 
-  double rate_sim_;
-  double rate_pub_;
+  std::vector<PoseStamped> path_;
 };
 
 }  // namespace autoware_practice_simulator

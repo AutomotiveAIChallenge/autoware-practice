@@ -14,7 +14,7 @@
 
 #include "condition.hpp"
 
-#include <boost/geometry/algorithms/within.hpp>
+#include <boost/geometry/algorithms/intersects.hpp>
 
 #include <algorithm>
 #include <string>
@@ -143,7 +143,7 @@ SuccessArea::SuccessArea(YAML::Node yaml)
 
 TriState SuccessArea::update(const JudgeInput & data)
 {
-  return boost::geometry::within(data.point, area_) ? TriState::Success : TriState::Judging;
+  return boost::geometry::intersects(data.path, area_) ? TriState::Success : TriState::Judging;
 }
 
 std::vector<RvizMarker> SuccessArea::visualize()
@@ -161,7 +161,7 @@ FailureArea::FailureArea(YAML::Node yaml)
 
 TriState FailureArea::update(const JudgeInput & data)
 {
-  return boost::geometry::within(data.point, area_) ? TriState::Failure : TriState::Judging;
+  return boost::geometry::intersects(data.path, area_) ? TriState::Failure : TriState::Judging;
 }
 
 std::vector<RvizMarker> FailureArea::visualize()

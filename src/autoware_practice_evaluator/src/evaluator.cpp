@@ -23,6 +23,7 @@ Evaluator::Evaluator(const rclcpp::NodeOptions & options) : Node("evaluator", op
 {
   using std::placeholders::_1;
   sub_pose_ = create_subscription<PoseStamped>("~/pose", rclcpp::QoS(1), std::bind(&Evaluator::on_pose, this, _1));
+  sub_path_ = create_subscription<VehiclePath>("~/path", rclcpp::QoS(1), std::bind(&Evaluator::on_path, this, _1));
   pub_result_ = create_publisher<JudgeStatus>("~/result", rclcpp::QoS(1));
   pub_markers_ = create_publisher<MarkerArray>("~/markers", rclcpp::QoS(1));
 
@@ -38,6 +39,19 @@ void Evaluator::on_pose(const PoseStamped & msg)
 {
   data_.point.x = msg.pose.position.x;
   data_.point.y = msg.pose.position.y;
+  data_.point.z = msg.pose.position.z;
+}
+
+void Evaluator::on_path(const VehiclePath & msg)
+{
+  data_.path.clear();
+  for (const auto & pose : msg.poses) {
+    Point point;
+    point.x = pose.pose.position.x;
+    point.y = pose.pose.position.y;
+    point.z = pose.pose.position.z;
+    data_.path.push_back(point);
+  }
 }
 
 void Evaluator::on_timer()

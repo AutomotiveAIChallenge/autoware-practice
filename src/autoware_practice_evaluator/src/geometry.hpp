@@ -16,6 +16,7 @@
 #define GEOMETRY_HPP_
 
 #include <boost/geometry/geometries/geometries.hpp>
+#include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 #include <geometry_msgs/msg/point.hpp>
@@ -26,13 +27,20 @@ namespace autoware_practice_evaluator
 {
 
 using Point = geometry_msgs::msg::Point;
-using Polygon = std::vector<Point>;
-
 Point Point2(double x, double y);
+
+struct Polygon : public std::vector<Point>
+{
+};
+
+struct LineString : public std::vector<Point>
+{
+};
 
 }  // namespace autoware_practice_evaluator
 
-BOOST_GEOMETRY_REGISTER_POINT_3D(autoware_practice_evaluator::Point, double, boost::geometry::cs::cartesian, x, y, z)  // NOLINT
-BOOST_GEOMETRY_REGISTER_RING(autoware_practice_evaluator::Polygon)                                                     // NOLINT
+BOOST_GEOMETRY_REGISTER_POINT_2D(autoware_practice_evaluator::Point, double, boost::geometry::cs::cartesian, x, y)  // NOLINT
+BOOST_GEOMETRY_REGISTER_RING(autoware_practice_evaluator::Polygon)                                                  // NOLINT
+BOOST_GEOMETRY_REGISTER_LINESTRING(autoware_practice_evaluator::LineString)                                         // NOLINT
 
 #endif  // GEOMETRY_HPP_

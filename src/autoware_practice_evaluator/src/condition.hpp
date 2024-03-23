@@ -38,6 +38,7 @@ enum class TriState : int
 struct JudgeInput
 {
   Point point;
+  LineString path;
 };
 
 class Condition

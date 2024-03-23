@@ -49,31 +49,53 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
   // Init ROS interface.
   {
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
-    pub_pose_ = create_publisher<PoseStamped>("~/ground_truth/pose", rclcpp::QoS(1));
     pub_markers_ = create_publisher<MarkerArray>("~/markers", rclcpp::QoS(1));
+    pub_pose_ = create_publisher<PoseStamped>("~/ground_truth/pose", rclcpp::QoS(1));
+    pub_path_ = create_publisher<VehiclePath>("~/ground_truth/path", rclcpp::QoS(1));
+  }
+
+  // Init simulation settings.
+  {
+    time_resolution_ = declare_parameter<double>("time_resolution");
+    last_time_ = now();
   }
 
   // Init simulation timer.
   {
-    rate_sim_ = 20.0;
-    rate_pub_ = 10.0;
-    timer_sim_ = rclcpp::create_timer(this, get_clock(), rclcpp::Rate(rate_sim_).period(), [this] { on_timer_sim(); });
-    timer_pub_ = rclcpp::create_timer(this, get_clock(), rclcpp::Rate(rate_pub_).period(), [this] { on_timer_pub(); });
+    const auto period = rclcpp::Rate(declare_parameter<double>("rate")).period();
+    timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
   }
 }
 
-void Simulator::on_timer_sim()
-{
-  const auto dt = 1.0 / rate_sim_;
-  controller_->update(dt, kinematics_->state());
-  kinematics_->update(dt, controller_->input());
-}
-
-void Simulator::on_timer_pub()
+void Simulator::on_timer()
 {
   const auto stamp = now();
+  execute(stamp);
   publish(stamp);
   controller_->publish(stamp);
+}
+
+void Simulator::execute(const rclcpp::Time & stamp)
+{
+  const auto create_pose_stamped = [](const rclcpp::Time & stamp, const VehicleState & state)
+  {
+    PoseStamped msg;
+    msg.header.stamp = stamp;
+    msg.header.frame_id = "map";
+    msg.pose.position.x = state.point.x;
+    msg.pose.position.y = state.point.y;
+    msg.pose.position.z = 0.0;
+    msg.pose.orientation = yaw_to_quaternion(state.angle);
+    return msg;
+  };
+
+  path_.clear();
+  while (last_time_ < stamp) {
+    controller_->update(time_resolution_, kinematics_->state());
+    kinematics_->update(time_resolution_, controller_->input());
+    path_.push_back(create_pose_stamped(last_time_, kinematics_->state()));
+    last_time_ += rclcpp::Duration::from_seconds(time_resolution_);
+  }
 }
 
 void Simulator::publish(const rclcpp::Time & stamp)
@@ -105,6 +127,15 @@ void Simulator::publish(const rclcpp::Time & stamp)
     msg.pose.position.z = 0.0;
     msg.pose.orientation = quaternion;
     pub_pose_->publish(msg);
+  }
+
+  // Vehicle path.
+  {
+    VehiclePath msg;
+    msg.header.stamp = stamp;
+    msg.header.frame_id = "map";
+    msg.poses = path_;
+    pub_path_->publish(msg);
   }
 
   // Vehicle markers.
