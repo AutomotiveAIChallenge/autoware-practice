@@ -20,57 +20,30 @@
 namespace autoware_practice_simulator
 {
 
-VehicleKinematics::VehicleKinematics(const VehicleSpecs & specs)
+VehicleKinematics::VehicleKinematics()
 {
-  specs_ = specs;
-
   state_.point = Point2{0.0, 0.0};
   state_.speed = 0.0;
-  state_.accel = 0.0;
   state_.angle = 0.0;
-  state_.steer = 0.0;
 }
 
-VehicleSpecs VehicleKinematics::specs() const
+void VehicleKinematics::update(double dt, const ArcPath & input)
 {
-  return specs_;
-}
-
-VehicleState VehicleKinematics::state() const
-{
-  return state_;
-}
-
-void VehicleKinematics::update(double dt, const VehicleInput & input)
-{
-  const auto accel = std::clamp(input.accel, -specs_.max_accel, +specs_.max_accel);
-  const auto steer = std::clamp(input.steer, -specs_.max_steer, +specs_.max_steer);
-
-  const auto brake_sign = std::signbit(state_.speed) ? +1.0 : -1.0;
-  const auto brake_limit = std::min(specs_.max_brake, std::abs(state_.speed) / dt);
-  const auto brake = std::clamp(input.brake, 0.0, brake_limit) * brake_sign;
-
-  state_.accel = accel + brake;
-  state_.steer = steer;
-  state_.speed = state_.speed + (state_.accel * dt);
-  state_.speed = std::clamp(state_.speed, -specs_.max_speed, +specs_.max_speed);
-
-  constexpr double steer_eps = 1e-3;
-  double angle_delta;
   Point2 point_delta;
+  double angle_delta;
 
-  if (std::abs(state_.steer) < steer_eps) {
+  if (input.radius == 0.0) {
     angle_delta = 0.0;
-    point_delta = Point2{state_.speed * dt, 0.0};
+    point_delta = Point2{input.speed * dt, 0.0};
   } else {
-    const auto radius = specs_.wheel_base / std::tan(state_.steer);
-    angle_delta = state_.speed * dt / radius;
-    point_delta = Point2{radius, 0.0}.rotate(angle_delta);
-    point_delta = Point2{point_delta.y, radius - point_delta.x};
+    angle_delta = input.speed * dt / input.radius;
+    point_delta = Point2{input.radius, 0.0}.rotate(angle_delta);
+    point_delta = Point2{point_delta.y, input.radius - point_delta.x};
   }
 
   state_.angle += angle_delta;
   state_.point += point_delta.rotate(state_.angle);
+  state_.speed = input.speed;
 }
 
 }  // namespace autoware_practice_simulator

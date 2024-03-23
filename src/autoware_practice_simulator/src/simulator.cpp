@@ -24,6 +24,11 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
 {
   // Init kinematics.
   {
+    kinematics_ = std::make_unique<VehicleKinematics>();
+  }
+
+  // Init controller.
+  {
     VehicleSpecs specs;
     const auto overhang = declare_parameter<std::vector<double>>("overhang");
     if (overhang.size() != specs.overhang.size()) {
@@ -38,12 +43,7 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
     specs.max_accel = declare_parameter<double>("max_accel");
     specs.max_brake = declare_parameter<double>("max_brake");
     specs.max_steer = declare_parameter<double>("max_steer");
-    kinematics_ = std::make_unique<VehicleKinematics>(specs);
-  }
-
-  // Init controller.
-  {
-    controller_ = std::make_unique<VehicleController>(*this);
+    controller_ = std::make_unique<VehicleController>(*this, specs, kinematics_.get());
   }
 
   // Init ROS interface.
@@ -91,8 +91,7 @@ void Simulator::execute(const rclcpp::Time & stamp)
 
   path_.clear();
   while (last_time_ < stamp) {
-    controller_->update(time_resolution_, kinematics_->state());
-    kinematics_->update(time_resolution_, controller_->input());
+    controller_->update(time_resolution_);
     path_.push_back(create_pose_stamped(last_time_, kinematics_->state()));
     last_time_ += rclcpp::Duration::from_seconds(time_resolution_);
   }
@@ -100,7 +99,7 @@ void Simulator::execute(const rclcpp::Time & stamp)
 
 void Simulator::publish(const rclcpp::Time & stamp)
 {
-  const auto specs = kinematics_->specs();
+  const auto specs = controller_->specs();
   const auto state = kinematics_->state();
   const auto quaternion = yaw_to_quaternion(state.angle);
 
