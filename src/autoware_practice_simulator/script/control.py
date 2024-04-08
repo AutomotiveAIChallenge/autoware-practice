@@ -35,8 +35,8 @@ def addstr_and_clrtoeol(stdscr, y, x, text):
 class VehicleControl:
     def __init__(self):
         self.thread = None
+        self.maximum_accel = 5.0
         self.command_accel = 0.0
-        self.current_accel = 0.0
         self.command_speed = 0.0
         self.current_speed = 0.0
         self.command_steer = 0.0
@@ -76,8 +76,8 @@ class VehicleControl:
         self.current_gear = gear_strs.get(msg.report)
 
     def on_timer(self):
-        sign = -1.0 if self.command_gear == "R" else +1.0
-        self.command_accel = math.copysign(5.0, self.command_speed - self.current_speed) * sign
+        accel = (self.command_speed - self.current_speed) * (-1.0 if self.command_gear == "R" else +1.0)
+        self.command_accel = min(accel, self.maximum_accel)
         command = AckermannControlCommand()
         command.stamp = self.node.get_clock().now().to_msg()
         command.longitudinal.speed = self.command_speed
@@ -93,8 +93,8 @@ class VehicleControl:
     def main(self, stdscr: curses.window):
         stdscr.timeout(100)
         stdscr.keypad(True)
-        stdscr.addstr(0, 0, "Command Accel:")
-        stdscr.addstr(1, 0, "Current Accel:")
+        stdscr.addstr(0, 0, "Maximum Accel:")
+        stdscr.addstr(1, 0, "Command Accel:")
         stdscr.addstr(2, 0, "Command Speed:")
         stdscr.addstr(3, 0, "Current Speed:")
         stdscr.addstr(4, 0, "Command Steer:")
@@ -104,8 +104,8 @@ class VehicleControl:
         while True:
             self.keyinput(stdscr.getch())
             self.update()
-            addstr_and_clrtoeol(stdscr, 0, 15, f"{self.command_accel:.2f}")
-            addstr_and_clrtoeol(stdscr, 1, 15, "----")
+            addstr_and_clrtoeol(stdscr, 0, 15, f"{self.maximum_accel:.2f}")
+            addstr_and_clrtoeol(stdscr, 1, 15, f"{self.command_accel:.2f}")
             addstr_and_clrtoeol(stdscr, 2, 15, f"{self.command_speed:.2f}")
             addstr_and_clrtoeol(stdscr, 3, 15, f"{self.current_speed:.2f}")
             addstr_and_clrtoeol(stdscr, 4, 15, f"{self.command_steer:.2f}")
@@ -115,13 +115,17 @@ class VehicleControl:
 
     def keyinput(self, key):
         if key == curses.KEY_UP:
-            self.command_speed = self.command_speed + 1.0
+            self.command_speed += 1.0
         if key == curses.KEY_DOWN:
-            self.command_speed = self.command_speed - 1.0
+            self.command_speed -= 1.0
         if key == curses.KEY_LEFT:
-            self.command_steer = self.command_steer + 1.0
+            self.command_steer += 1.0
         if key == curses.KEY_RIGHT:
-            self.command_steer = self.command_steer - 1.0
+            self.command_steer -= 1.0
+        if key == ord("w"):
+            self.maximum_accel += 1.0
+        if key == ord("s"):
+            self.maximum_accel = max(0.0, self.maximum_accel - 1.0)
         if key == ord("z"):
             self.command_speed = 0.0
         if key == ord("x"):

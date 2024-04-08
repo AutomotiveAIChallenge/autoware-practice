@@ -15,7 +15,7 @@
 #ifndef CONTROLLER_HPP_
 #define CONTROLLER_HPP_
 
-#include "interface.hpp"
+#include "kinematics.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
@@ -33,13 +33,13 @@ using autoware_auto_vehicle_msgs::msg::GearReport;
 using autoware_auto_vehicle_msgs::msg::SteeringReport;
 using autoware_auto_vehicle_msgs::msg::VelocityReport;
 
-struct VehicleController
+class VehicleController
 {
 public:
-  explicit VehicleController(rclcpp::Node & node);
-  VehicleInput input() const;
-  void update(double dt, const VehicleState & state);
+  VehicleController(rclcpp::Node & node, const VehicleSpecs & specs, VehicleKinematics * kinematics);
+  void update(double dt);
   void publish(const rclcpp::Time & stamp);
+  VehicleSpecs specs() const { return specs_; }
 
 private:
   void on_command(const ControlCommand & msg);
@@ -50,12 +50,18 @@ private:
   rclcpp::Publisher<VelocityReport>::SharedPtr pub_velocity_;
   rclcpp::Publisher<SteeringReport>::SharedPtr pub_steering_;
 
-  VehicleInput input_;
-  VehicleState state_;
-  double speed_;
-  double accel_;
-  double steer_;
+  struct VehicleCommand;
+  VehicleCommand create_command();
+
+  VehicleKinematics * kinematics_;
+  VehicleSpecs specs_;
   GearReport::_report_type gear_;
+  double actual_speed_;
+  double actual_accel_;
+  double actual_steer_;
+  double target_speed_;
+  double target_accel_;
+  double target_steer_;
 };
 
 }  // namespace autoware_practice_simulator

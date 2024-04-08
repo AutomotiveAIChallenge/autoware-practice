@@ -39,17 +39,7 @@ struct VehicleState
 {
   Point2 point;
   double speed;
-  double accel;
   double angle;
-  double steer;
-};
-
-struct VehicleInput
-{
-  bool parking;
-  double accel;
-  double brake;
-  double steer;
 };
 
 }  // namespace autoware_practice_simulator

@@ -20,16 +20,20 @@
 namespace autoware_practice_simulator
 {
 
+struct ArcPath
+{
+  double radius;
+  double speed;
+};
+
 class VehicleKinematics
 {
 public:
-  explicit VehicleKinematics(const VehicleSpecs & specs);
-  VehicleSpecs specs() const;
-  VehicleState state() const;
-  void update(double dt, const VehicleInput & input);
+  VehicleKinematics();
+  void update(double dt, const ArcPath & input);
+  VehicleState state() const { return state_; }
 
 private:
-  VehicleSpecs specs_;
   VehicleState state_;
 };
 

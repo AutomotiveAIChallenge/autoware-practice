@@ -19,7 +19,14 @@
 namespace autoware_practice_simulator
 {
 
-VehicleController::VehicleController(rclcpp::Node & node)
+struct VehicleController::VehicleCommand
+{
+  double accel;
+  double brake;
+  double steer;
+};
+
+VehicleController::VehicleController(rclcpp::Node & node, const VehicleSpecs & specs, VehicleKinematics * kinematics)
 {
   using std::placeholders::_1;
   sub_control_ = node.create_subscription<ControlCommand>("~/command/control", rclcpp::QoS(1), std::bind(&VehicleController::on_command, this, _1));
@@ -28,18 +35,20 @@ VehicleController::VehicleController(rclcpp::Node & node)
   pub_velocity_ = node.create_publisher<VelocityReport>("~/status/velocity", rclcpp::QoS(1));
   pub_steering_ = node.create_publisher<SteeringReport>("~/status/steering", rclcpp::QoS(1));
 
-  input_ = VehicleInput{true, 0.0, 0.0, 0.0};
-  speed_ = 0.0;
-  accel_ = 0.0;
-  steer_ = 0.0;
+  kinematics_ = kinematics;
+  specs_ = specs;
   gear_ = GearReport::DRIVE;
+  actual_speed_ = 0.0;
+  actual_accel_ = 0.0;
+  actual_steer_ = 0.0;
+  target_accel_ = 0.0;
+  target_steer_ = 0.0;
 }
 
 void VehicleController::on_command(const ControlCommand & msg)
 {
-  speed_ = msg.longitudinal.speed;
-  accel_ = msg.longitudinal.acceleration;
-  steer_ = msg.lateral.steering_tire_angle;
+  target_accel_ = msg.longitudinal.acceleration;
+  target_steer_ = msg.lateral.steering_tire_angle;
 }
 
 void VehicleController::on_gear(const GearCommand & msg)
@@ -54,56 +63,61 @@ void VehicleController::on_gear(const GearCommand & msg)
   // clang-format on
 }
 
-VehicleInput VehicleController::input() const
+void VehicleController::update(double dt)
 {
-  return input_;
+  const auto current = kinematics_->state();
+  const auto command = create_command();
+
+  const auto brake_sign = std::signbit(current.speed) ? +1.0 : -1.0;
+  const auto brake_limit = std::min(specs_.max_brake, std::abs(current.speed) / dt);
+  const auto brake = std::clamp(command.brake, 0.0, brake_limit) * brake_sign;
+  const auto accel = std::clamp(command.accel, -specs_.max_accel, +specs_.max_accel);
+  const auto steer = std::clamp(command.steer, -specs_.max_steer, +specs_.max_steer);
+
+  actual_accel_ = accel + brake;
+  actual_steer_ = steer;
+  actual_speed_ = actual_speed_ + (actual_accel_ * dt);
+  actual_speed_ = std::clamp(actual_speed_, -specs_.max_speed, +specs_.max_speed);
+
+  constexpr double steer_eps = 1e-3;
+  const double radius = (std::abs(actual_steer_) < steer_eps) ? 0.0 : specs_.wheel_base / std::tan(actual_steer_);
+  kinematics_->update(dt, ArcPath{radius, actual_speed_});
 }
 
-void VehicleController::update(double dt, const VehicleState & state)
+VehicleController::VehicleCommand VehicleController::create_command()
 {
-  state_ = state;
-
-  if (gear_ == GearReport::PARK) {
-    input_.parking = true;
-    input_.accel = 0.0;
-    input_.brake = 0.0;
-    input_.steer = steer_;
-    return;
-  }
-
-  if (gear_ == GearReport::NEUTRAL) {
-    input_.parking = false;
-    input_.accel = 0.0;
-    input_.brake = 0.0;
-    input_.steer = steer_;
-    return;
-  }
-
   if (gear_ == GearReport::DRIVE) {
-    const auto speed_delta = (speed_ - state_.speed) / dt;
-    const auto ideal_accel = std::max(0.0, +speed_delta);
-    const auto ideal_brake = std::max(0.0, -speed_delta);
-    const auto accel_limit = std::max(0.0, +accel_);
-    const auto brake_limit = std::max(0.0, -accel_);
-    input_.parking = false;
-    input_.accel = std::min(ideal_accel, accel_limit);
-    input_.brake = std::min(ideal_brake, brake_limit);
-    input_.steer = steer_;
-    return;
+    const auto accel = std::max(0.0, +target_accel_);
+    const auto brake = std::max(0.0, -target_accel_);
+    const auto steer = target_steer_;
+    return VehicleCommand{accel, brake, steer};
   }
 
   if (gear_ == GearReport::REVERSE) {
-    const auto speed_delta = (speed_ - state_.speed) / dt;
-    const auto ideal_accel = std::max(0.0, -speed_delta);
-    const auto ideal_brake = std::max(0.0, +speed_delta);
-    const auto accel_limit = std::max(0.0, +accel_);
-    const auto brake_limit = std::max(0.0, -accel_);
-    input_.parking = false;
-    input_.accel = std::min(ideal_accel, accel_limit) * (-1.0);
-    input_.brake = std::min(ideal_brake, brake_limit);
-    input_.steer = steer_;
-    return;
+    const auto accel = std::max(0.0, -target_accel_);
+    const auto brake = std::max(0.0, +target_accel_);
+    const auto steer = target_steer_;
+    return VehicleCommand{-1.0 * accel, brake, steer};
   }
+
+  if (gear_ == GearReport::PARK) {
+    const auto accel = 0.0;
+    const auto brake = specs_.max_brake;
+    const auto steer = target_steer_;
+    return VehicleCommand{accel, brake, steer};
+  }
+
+  if (gear_ == GearReport::NEUTRAL) {
+    const auto accel = 0.0;
+    const auto brake = 0.0;
+    const auto steer = target_steer_;
+    return VehicleCommand{accel, brake, steer};
+  }
+
+  const auto accel = 0.0;
+  const auto brake = specs_.max_brake;
+  const auto steer = target_steer_;
+  return VehicleCommand{accel, brake, steer};
 }
 
 void VehicleController::publish(const rclcpp::Time & stamp)
@@ -113,7 +127,7 @@ void VehicleController::publish(const rclcpp::Time & stamp)
     VelocityReport msg;
     msg.header.stamp = stamp;
     msg.header.frame_id = "base_link";
-    msg.longitudinal_velocity = state_.speed;
+    msg.longitudinal_velocity = actual_speed_;
     pub_velocity_->publish(msg);
   }
 
@@ -121,7 +135,7 @@ void VehicleController::publish(const rclcpp::Time & stamp)
   {
     SteeringReport msg;
     msg.stamp = stamp;
-    msg.steering_tire_angle = state_.steer;
+    msg.steering_tire_angle = actual_steer_;
     pub_steering_->publish(msg);
   }
 
