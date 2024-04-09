@@ -5,8 +5,10 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode() : Node("p_controller"), target_velocity_(1.0), kp_(0.01)
+SampleNode::SampleNode() : Node("p_controller")
 {
+  kp_ = 0.5;
+  target_velocity_ = 1.0;
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   
   velocity_subscriber_ = create_subscription<VelocityReport>(
