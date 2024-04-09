@@ -5,7 +5,7 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode() : Node("sample_node"), target_velocity_(1.0), kp_(0.5)
+SampleNode::SampleNode() : Node("sample_node"), target_velocity_(1.0), kp_(0.01)
 {
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   
