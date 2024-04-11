@@ -3,6 +3,14 @@
     <param name="input_topic" value="/control/command/control_cmd"/>
     <param name="output_topic" value="/simulator/command/control"/>
   </node>
+  <node pkg="topic_tools" exec="relay" name="velocity_report" namespace="vehicle_interface">
+    <param name="input_topic" value="/simulator/status/velocity"/>
+    <param name="output_topic" value="/vehicle/status/velocity_status"/>
+  </node>
+  <node pkg="topic_tools" exec="relay" name="steering_report" namespace="vehicle_interface">
+    <param name="input_topic" value="/simulator/status/steering"/>
+    <param name="output_topic" value="/vehicle/status/steering_status"/>
+  </node>
   <node pkg="topic_tools" exec="relay" name="gear_cmd" namespace="vehicle_interface">
     <param name="input_topic" value="/control/command/gear_cmd"/>
     <param name="output_topic" value="/simulator/command/gear"/>

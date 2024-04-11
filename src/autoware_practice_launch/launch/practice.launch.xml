@@ -4,6 +4,7 @@
   <let name="judge_file" value="$(find-pkg-share autoware_practice_problems)/data/$(var problem).yaml"/>
 
   <include file="$(find-pkg-share autoware_practice_launch)/launch/rviz.launch.xml"/>
+  <include file="$(find-pkg-share autoware_practice_driver)/launch/vehicle.launch.xml"/>
   <include file="$(find-pkg-share autoware_practice_simulator)/launch/simulator.launch.xml"/>
   <include file="$(find-pkg-share autoware_practice_evaluator)/launch/evaluator.launch.xml"/>
 </launch>

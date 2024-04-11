@@ -5,5 +5,4 @@
     <param from="$(var param_file)"/>
     <param from="$(var specs_file)"/>
   </node>
-  <include file="$(find-pkg-share autoware_practice_simulator)/launch/vehicle.launch.xml"/>
 </launch>
