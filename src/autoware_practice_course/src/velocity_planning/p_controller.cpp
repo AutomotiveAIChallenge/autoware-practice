@@ -29,7 +29,7 @@ void SampleNode::on_timer()
   
   double velocity_error = target_velocity_ - current_velocity_;
   command.longitudinal.acceleration = kp_ * velocity_error;
-  command.longitudinal.speed = 0.0;
+  command.longitudinal.speed = target_velocity_;
   
   command.lateral.steering_tire_angle = 0.0;
   
