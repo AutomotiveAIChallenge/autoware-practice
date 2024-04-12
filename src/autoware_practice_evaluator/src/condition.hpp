@@ -109,6 +109,16 @@ private:
   Polygon area_;
 };
 
+class Constant : public Condition
+{
+public:
+  explicit Constant(YAML::Node yaml);
+  TriState update(const JudgeInput & data) override;
+
+private:
+  TriState value_;
+};
+
 }  // namespace autoware_practice_evaluator
 
 #endif  // CONDITION_HPP_
