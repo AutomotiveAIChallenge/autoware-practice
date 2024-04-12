@@ -12,7 +12,7 @@ SampleNode::SampleNode() : Node("p_controller")
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   
   velocity_subscriber_ = create_subscription<VelocityReport>(
-    "/simulator/status/velocity", 10, [this](const VelocityReport::SharedPtr msg) {
+    "/vehicle/status/velocity_status", 10, [this](const VelocityReport::SharedPtr msg) {
       current_velocity_ = msg->longitudinal_velocity; 
   });
 
