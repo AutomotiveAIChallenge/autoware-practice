@@ -38,6 +38,15 @@ Polygon yaml_polygon(YAML::Node yaml)
   return polygon;
 }
 
+TriState yaml_tristate(YAML::Node yaml)
+{
+  const auto value = yaml.as<std::string>("");
+  if (value == "success") return TriState::Success;
+  if (value == "failure") return TriState::Failure;
+  if (value == "judging") return TriState::Judging;
+  throw std::runtime_error("unknown state value: " + value);
+}
+
 TriState normalize(TriState state)
 {
   if (state == TriState::Minimum) return TriState::Judging;
@@ -52,6 +61,7 @@ std::unique_ptr<Condition> Condition::make_unique(YAML::Node yaml)
   if (type == "JudgeResult") return std::make_unique<JudgeResult>(yaml);
   if (type == "SuccessArea") return std::make_unique<SuccessArea>(yaml);
   if (type == "FailureArea") return std::make_unique<FailureArea>(yaml);
+  if (type == "Constant") return std::make_unique<Constant>(yaml);
   if (type == "LogicalAnd") return std::make_unique<LogicalAnd>(yaml);
   throw std::runtime_error("unknown condition type: " + type);
 }
@@ -170,6 +180,16 @@ std::vector<RvizMarker> FailureArea::visualize()
   marker.color(1.0, 0.0, 0.0);
   marker.polygon(area_);
   return {marker};
+}
+
+Constant::Constant(YAML::Node yaml)
+{
+  value_ = yaml_tristate(yaml["value"]);
+}
+
+TriState Constant::update(const JudgeInput &)
+{
+  return value_;
 }
 
 }  // namespace autoware_practice_evaluator
