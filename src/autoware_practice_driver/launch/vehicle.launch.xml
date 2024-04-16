@@ -23,4 +23,6 @@
   </node>
   <node pkg="autoware_practice_gyro_odometer" exec="velocity_transformer" name="gyro_odometer">
   </node>
+  <node pkg="autoware_practice_localizer" exec="localizer" name="localizer">
+  </node>
 </launch>
