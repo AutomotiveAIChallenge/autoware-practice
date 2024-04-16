@@ -19,4 +19,6 @@
     <param name="input_topic" value="/simulator/status/gear"/>
     <param name="output_topic" value="/vehicle/status/gear_status"/>
   </node>
+  <node pkg="autoware_practice_gnss_poser" exec="pose_transformer" name="pose_transformer">
+  </node>
 </launch>
