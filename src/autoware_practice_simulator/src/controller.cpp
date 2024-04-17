@@ -81,6 +81,7 @@ void VehicleController::update(double dt)
 
   constexpr double steer_eps = 1e-3;
   const double radius = (std::abs(actual_steer_) < steer_eps) ? 0.0 : specs_.wheel_base / std::tan(actual_steer_);
+  heading_rate_ = (radius == 0.0) ? 0.0 : actual_speed_ / radius;
   kinematics_->update(dt, ArcPath{radius, actual_speed_});
 }
 
@@ -128,6 +129,8 @@ void VehicleController::publish(const rclcpp::Time & stamp)
     msg.header.stamp = stamp;
     msg.header.frame_id = "base_link";
     msg.longitudinal_velocity = actual_speed_;
+    msg.lateral_velocity = 0.0;  
+    msg.heading_rate = heading_rate_;
     pub_velocity_->publish(msg);
   }
 

@@ -19,4 +19,10 @@
     <param name="input_topic" value="/simulator/status/gear"/>
     <param name="output_topic" value="/vehicle/status/gear_status"/>
   </node>
+  <node pkg="autoware_practice_gnss_poser" exec="pose_transformer" name="gnss_poser">
+  </node>
+  <node pkg="autoware_practice_gyro_odometer" exec="velocity_transformer" name="gyro_odometer">
+  </node>
+  <node pkg="autoware_practice_localizer" exec="localizer" name="localizer">
+  </node>
 </launch>
