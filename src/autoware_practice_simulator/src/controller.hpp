@@ -62,6 +62,7 @@ private:
   double target_speed_;
   double target_accel_;
   double target_steer_;
+  double heading_rate_;
 };
 
 }  // namespace autoware_practice_simulator
