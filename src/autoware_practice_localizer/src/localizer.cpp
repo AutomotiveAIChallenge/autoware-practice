@@ -12,7 +12,7 @@ public:
         pose_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseWithCovariance>(
             "/sensing/gnss/pose_with_covariance", 10, std::bind(&Localizer::pose_callback, this, std::placeholders::_1));
         twist_subscriber_ = this->create_subscription<geometry_msgs::msg::TwistWithCovariance>(
-            "twist_estimator/twist_with_covariance", 10, std::bind(&Localizer::twist_callback, this, std::placeholders::_1));
+            "/localization/twist_estimator/twist_with_covariance", 10, std::bind(&Localizer::twist_callback, this, std::placeholders::_1));
     }
 
 private:

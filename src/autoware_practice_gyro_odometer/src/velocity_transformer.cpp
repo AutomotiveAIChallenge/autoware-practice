@@ -7,7 +7,7 @@ class VelocityTransformer : public rclcpp::Node
 public:
     VelocityTransformer() : Node("velocity_transformer")
     {
-        publisher_ = this->create_publisher<geometry_msgs::msg::TwistWithCovariance>("twist_estimator/twist_with_covariance", 10);
+        publisher_ = this->create_publisher<geometry_msgs::msg::TwistWithCovariance>("/localization/twist_estimator/twist_with_covariance", 10);
         subscription_ = this->create_subscription<autoware_auto_vehicle_msgs::msg::VelocityReport>(
             "/vehicle/status/velocity_status", 10, std::bind(&VelocityTransformer::velocity_callback, this, std::placeholders::_1));
     }
