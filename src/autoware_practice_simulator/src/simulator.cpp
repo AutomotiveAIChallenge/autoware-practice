@@ -51,6 +51,7 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     pub_markers_ = create_publisher<MarkerArray>("~/markers", rclcpp::QoS(1));
     pub_pose_ = create_publisher<PoseStamped>("~/ground_truth/pose", rclcpp::QoS(1));
+    pub_twist_ = create_publisher<TwistStamped>("~/ground_truth/twist", rclcpp::QoS(1));
     pub_path_ = create_publisher<VehiclePath>("~/ground_truth/path", rclcpp::QoS(1));
   }
 
@@ -58,6 +59,8 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
   {
     time_resolution_ = declare_parameter<double>("time_resolution");
     last_time_ = now();
+    last_stamp_ = now();
+    last_angle_ = 0.0; // Initial angle is 0.
   }
 
   // Init simulation timer.
@@ -127,6 +130,28 @@ void Simulator::publish(const rclcpp::Time & stamp)
     msg.pose.orientation = quaternion;
     pub_pose_->publish(msg);
   }
+
+  // Vehicle twist.
+  {
+    double time_diff = (stamp - last_stamp_).seconds();
+    double angle_diff = atan2(sin(state.angle - last_angle_), cos(state.angle - last_angle_));
+    double angular_velocity_z = angle_diff / time_diff;
+
+    TwistStamped msg;
+    msg.header.stamp = stamp;
+    msg.header.frame_id = "sim_base_link";
+    msg.twist.linear.x = state.speed;
+    msg.twist.linear.y = 0.0;
+    msg.twist.linear.z = 0.0;
+    msg.twist.angular.x = 0.0;
+    msg.twist.angular.y = 0.0;
+    msg.twist.angular.z = angular_velocity_z;
+    pub_twist_->publish(msg);
+
+    // Update last recorded angle and timestamp for next iteration
+    last_angle_ = state.angle;
+    last_stamp_ = stamp;
+}
 
   // Vehicle path.
   {

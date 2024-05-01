@@ -51,8 +51,11 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_markers_;
   rclcpp::Publisher<PoseStamped>::SharedPtr pub_pose_;
+  rclcpp::Publisher<TwistStamped>::SharedPtr pub_twist_;
   rclcpp::Publisher<VehiclePath>::SharedPtr pub_path_;
   rclcpp::Time last_time_;
+  rclcpp::Time last_stamp_;
+  double last_angle_; 
   double time_resolution_;
 
   std::vector<PoseStamped> path_;

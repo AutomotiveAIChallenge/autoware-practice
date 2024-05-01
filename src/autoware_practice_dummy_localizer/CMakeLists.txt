@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(autoware_practice_localizer)
+project(autoware_practice_dummy_localizer)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -11,10 +11,10 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 
-add_executable(localizer src/localizer.cpp)
-ament_target_dependencies(localizer rclcpp geometry_msgs nav_msgs)
+add_executable(dummy_localizer src/dummy_localizer.cpp)
+ament_target_dependencies(dummy_localizer rclcpp geometry_msgs nav_msgs)
 install(TARGETS
-  localizer
+  dummy_localizer
   DESTINATION lib/${PROJECT_NAME})
 
 
