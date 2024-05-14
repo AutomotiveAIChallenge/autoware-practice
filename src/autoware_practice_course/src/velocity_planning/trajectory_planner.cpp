@@ -1,18 +1,28 @@
 #include "trajectory_planner.hpp"
 
 #include <memory>
+#include <cmath>
 
 namespace autoware_practice_course
 {
 
 SampleNode::SampleNode() : Node("trajectory_planner")
 {
+  using std::placeholders::_1;
+
+  goal_ = 100.0;
   declare_parameter<double>("goal", 100.0);
   get_parameter("goal", goal_);
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
+  sub_kinematic_state_ = create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_vehicle_position, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
+}
+
+void SampleNode::update_vehicle_position(const Odometry & msg)
+{
+  position_x_ = msg.pose.pose.position.x;
 }
 
 void SampleNode::on_timer()
@@ -22,8 +32,9 @@ void SampleNode::on_timer()
   Trajectory trajectory;
   trajectory.header.stamp = stamp;
   trajectory.header.frame_id = "map";
+  int distance = static_cast<int>(std::floor(goal_ - position_x_));
 
-  for (int i = 0; i <= 10; ++i) {
+  for (int i = 0; i <= distance; ++i) {
     TrajectoryPoint point;
     point.time_from_start = rclcpp::Duration::from_seconds(i);
     point.time_from_start.nanosec = 0;
@@ -34,7 +45,7 @@ void SampleNode::on_timer()
     point.pose.orientation.y = 0.0;
     point.pose.orientation.z = 0.0;
     point.pose.orientation.w = 1.0;
-    point.longitudinal_velocity_mps = 1/static_cast<double>(i);
+    point.longitudinal_velocity_mps = 5*(100 - static_cast<double>(i) - position_x_)/(static_cast<double>(i) + position_x_);
     point.lateral_velocity_mps = 0.0;
     point.acceleration_mps2 = 0.0;
     point.heading_rate_rps = 0.0;

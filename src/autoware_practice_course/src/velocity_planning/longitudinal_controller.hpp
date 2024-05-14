@@ -3,9 +3,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
-#include <autoware_auto_planning_msgs/msg/trajectory_point.hpp>
+#include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-
 
 namespace autoware_practice_course
 {
@@ -17,17 +16,19 @@ public:
 
 private:
   using Trajectory = autoware_auto_planning_msgs::msg::Trajectory;
-  using TrajectoryPoint = autoware_auto_planning_msgs::msg::TrajectoryPoint;
+  using AckermannControlCommand = autoware_auto_control_msgs::msg::AckermannControlCommand;
   using Odometry = nav_msgs::msg::Odometry;
 
   void on_timer();
-  void update_vehicle_position(const Odometry & msg);
+  void update_target_velocity(const Trajectory & msg);
+  void update_current_velocity(const Odometry & msg);
   rclcpp::TimerBase::SharedPtr timer_;
-  rclcpp::Publisher<Trajectory>::SharedPtr pub_trajectory_;
+  rclcpp::Publisher<AckermannControlCommand>::SharedPtr pub_command_;
+  rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<Odometry>::SharedPtr sub_kinematic_state_;
-  double goal_;
-  double position_x_;
-
+  double current_velocity_;
+  double target_velocity_;
+  double kp_;
 };
 
 } 
