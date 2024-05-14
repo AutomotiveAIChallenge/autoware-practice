@@ -34,7 +34,7 @@ void SampleNode::on_timer()
   trajectory.header.frame_id = "map";
   int distance = static_cast<int>(std::floor(goal_ - position_x_));
 
-  for (int i = 0; i <= distance; ++i) {
+  for (int i = 1; i <= distance; ++i) {
     TrajectoryPoint point;
     point.time_from_start = rclcpp::Duration::from_seconds(i);
     point.time_from_start.nanosec = 0;
@@ -46,6 +46,7 @@ void SampleNode::on_timer()
     point.pose.orientation.z = 0.0;
     point.pose.orientation.w = 1.0;
     point.longitudinal_velocity_mps = 5*(100 - static_cast<double>(i) - position_x_)/(static_cast<double>(i) + position_x_);
+    point.longitudinal_velocity_mps = (static_cast<double>(i) + position_x_ < 50) ? (0.2 * (static_cast<double>(i) + position_x_)) : (-0.2 * (static_cast<double>(i) + position_x_) + 20.0);
     point.lateral_velocity_mps = 0.0;
     point.acceleration_mps2 = 0.0;
     point.heading_rate_rps = 0.0;
