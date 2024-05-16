@@ -25,11 +25,11 @@ private:
 
   rclcpp::Subscription<VelocityReport>::SharedPtr velocity_subscriber_;
 
-  double current_velocity_ = 0.0;
+  double current_velocity_;
 
-  double target_velocity_ = 0.0;
+  double target_velocity_;
 
-  double kp_ = 0.0;
+  double kp_;
 
   void velocity_callback(const VelocityReport::SharedPtr msg);
 };
