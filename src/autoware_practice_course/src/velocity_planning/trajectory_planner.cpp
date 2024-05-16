@@ -45,8 +45,8 @@ void SampleNode::on_timer()
     point.pose.orientation.y = 0.0;
     point.pose.orientation.z = 0.0;
     point.pose.orientation.w = 1.0;
-    point.longitudinal_velocity_mps = 5*(100 - static_cast<double>(i) - position_x_)/(static_cast<double>(i) + position_x_);
-    point.longitudinal_velocity_mps = (static_cast<double>(i) + position_x_ < 50) ? (0.2 * (static_cast<double>(i) + position_x_)) : (-0.2 * (static_cast<double>(i) + position_x_) + 20.0);
+    double waypoint_i_x = static_cast<double>(i) + position_x_;
+    point.longitudinal_velocity_mps = (waypoint_i_x < 50) ? (0.2 * waypoint_i_x) : (-0.2 * waypoint_i_x + 20.0);
     point.lateral_velocity_mps = 0.0;
     point.acceleration_mps2 = 0.0;
     point.heading_rate_rps = 0.0;
