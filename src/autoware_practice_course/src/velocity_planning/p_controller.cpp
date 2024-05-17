@@ -7,11 +7,11 @@ namespace autoware_practice_course
 
 SampleNode::SampleNode() : Node("p_controller")
 {
-  this->declare_parameter<double>("kp", 0.0);
-  this->declare_parameter<double>("target_velocity", 1.0);
+  declare_parameter<double>("kp", 0.0);
+  declare_parameter<double>("target_velocity", 1.0);
 
-  this->get_parameter("kp", kp_);
-  this->get_parameter("target_velocity", target_velocity_);
+  get_parameter("kp", kp_);
+  get_parameter("target_velocity", target_velocity_);
 
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   
