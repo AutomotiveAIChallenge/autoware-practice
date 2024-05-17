@@ -7,8 +7,8 @@ class PoseTransformer : public rclcpp::Node
 public:
     PoseTransformer() : Node("pose_transformer")
     {
-        publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovariance>("/sensing/gnss/pose_with_covariance", 10);
-        subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+        publisher_ = create_publisher<geometry_msgs::msg::PoseWithCovariance>("/sensing/gnss/pose_with_covariance", 10);
+        subscription_ = create_subscription<geometry_msgs::msg::PoseStamped>(
             "/simulator/ground_truth/pose", 10, std::bind(&PoseTransformer::pose_callback, this, std::placeholders::_1));
     }
 

@@ -8,10 +8,10 @@ class DummyLocalizer : public rclcpp::Node
 public:
     DummyLocalizer() : Node("dummy_localizer")
     {
-        publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("/localization/kinematic_state", 10);
-        pose_subscriber_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+        publisher_ = create_publisher<nav_msgs::msg::Odometry>("/localization/kinematic_state", 10);
+        pose_subscriber_ = create_subscription<geometry_msgs::msg::PoseStamped>(
             "/simulator/ground_truth/pose", 10, std::bind(&DummyLocalizer::pose_callback, this, std::placeholders::_1));
-        twist_subscriber_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
+        twist_subscriber_ = create_subscription<geometry_msgs::msg::TwistStamped>(
             "/simulator/ground_truth/twist", 10, std::bind(&DummyLocalizer::twist_callback, this, std::placeholders::_1));
     }
 
@@ -32,7 +32,7 @@ private:
     {
         if (last_pose_ && last_twist_) {
             nav_msgs::msg::Odometry odom;
-            odom.header.stamp = this->get_clock()->now();
+            odom.header.stamp = now();
             odom.header.frame_id = "odom";
             odom.child_frame_id = "base_link";
             odom.pose.pose = *last_pose_;
