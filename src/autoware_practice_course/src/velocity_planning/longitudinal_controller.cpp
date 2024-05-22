@@ -13,7 +13,7 @@ SampleNode::SampleNode() : Node("longitudinal_controller"), kp_(0.0)
 
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   sub_trajectory_ = create_subscription<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1), std::bind(&SampleNode::update_target_velocity, this, _1));
-  sub_kinematic_state_= create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_velocity, this, _1));
+  sub_kinematic_state_= create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
@@ -21,12 +21,26 @@ SampleNode::SampleNode() : Node("longitudinal_controller"), kp_(0.0)
 
 void SampleNode::update_target_velocity(const Trajectory & msg)
 {
-  target_velocity_ = msg.points[0].longitudinal_velocity_mps;
+  double min_distance = std::numeric_limits<double>::max();
+  size_t closest_waypoint_index = 0;
+
+  for (size_t i = 0; i < msg.points.size(); ++i) {
+    double dx = msg.points[i].pose.position.x - current_pose_;
+    double distance = std::abs(dx);
+
+    if (distance < min_distance) {
+      min_distance = distance;
+      closest_waypoint_index = i;
+    }
+  }
+
+  target_velocity_ = msg.points[closest_waypoint_index].longitudinal_velocity_mps;
 };
 
-void SampleNode::update_current_velocity(const Odometry & msg)
+void SampleNode::update_current_state(const Odometry & msg)
 {
   current_velocity_ = msg.twist.twist.linear.x;
+  current_pose_ = msg.pose.pose.position.x;  // 現在の車両の位置を更新する
 };
 
 void SampleNode::on_timer()

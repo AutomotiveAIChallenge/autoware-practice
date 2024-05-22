@@ -32,7 +32,7 @@ void SampleNode::on_timer()
   Trajectory trajectory;
   trajectory.header.stamp = stamp;
   trajectory.header.frame_id = "map";
-  int distance = static_cast<int>(std::floor(goal_ - position_x_));
+  int distance = static_cast<int>(std::floor(goal_));
 
   for (int i = 1; i <= distance; ++i) {
     TrajectoryPoint point;
@@ -45,7 +45,7 @@ void SampleNode::on_timer()
     point.pose.orientation.y = 0.0;
     point.pose.orientation.z = 0.0;
     point.pose.orientation.w = 1.0;
-    double waypoint_i_x = static_cast<double>(i) + position_x_;
+    double waypoint_i_x = static_cast<double>(i);
     point.longitudinal_velocity_mps = (waypoint_i_x < 50) ? (0.2 * waypoint_i_x) : (-0.2 * waypoint_i_x + 20.0);
     point.lateral_velocity_mps = 0.0;
     point.acceleration_mps2 = 0.0;
@@ -53,7 +53,6 @@ void SampleNode::on_timer()
     point.front_wheel_angle_rad = 0.0;
     point.rear_wheel_angle_rad = 0.0;
     trajectory.points.push_back(point);
-
   }
   
   pub_trajectory_->publish(trajectory);
