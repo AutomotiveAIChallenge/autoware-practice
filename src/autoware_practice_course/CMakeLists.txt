@@ -16,6 +16,8 @@ ament_auto_find_build_dependencies()
 ament_auto_add_executable(vehicle_forward  src/vehicle/forward.cpp)
 ament_auto_add_executable(vehicle_backward src/vehicle/backward.cpp)
 ament_auto_add_executable(p_controller src/velocity_planning/p_controller.cpp)
+ament_auto_add_executable(trajectory_planner src/velocity_planning/trajectory_planner.cpp)
+ament_auto_add_executable(longitudinal_controller src/velocity_planning/longitudinal_controller.cpp)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
