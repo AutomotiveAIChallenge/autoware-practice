@@ -25,8 +25,10 @@ void SampleNode::update_target_velocity(const Trajectory & msg)
   size_t closest_waypoint_index = 0;
 
   for (size_t i = 0; i < msg.points.size(); ++i) {
-    double dx = msg.points[i].pose.position.x - current_pose_;
-    double distance = std::abs(dx);
+    double dx = msg.points[i].pose.position.x - current_pose_.x;
+    double dy = msg.points[i].pose.position.y - current_pose_.y;
+    double dz = msg.points[i].pose.position.z - current_pose_.z;
+    double distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
     if (distance < min_distance) {
       min_distance = distance;
@@ -40,7 +42,7 @@ void SampleNode::update_target_velocity(const Trajectory & msg)
 void SampleNode::update_current_state(const Odometry & msg)
 {
   current_velocity_ = msg.twist.twist.linear.x;
-  current_pose_ = msg.pose.pose.position.x;  // 現在の車両の位置を更新する
+  current_pose_ = msg.pose.pose.position;  // 現在の車両の位置を更新する
 };
 
 void SampleNode::on_timer()
