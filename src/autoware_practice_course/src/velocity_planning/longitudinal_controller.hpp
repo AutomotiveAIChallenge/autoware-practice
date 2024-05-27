@@ -2,10 +2,19 @@
 #define TRAJECTORY_PLANNER_HPP_
 
 #include <rclcpp/rclcpp.hpp>
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <sstream>
+
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
 #include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/point.hpp> 
+
 namespace autoware_practice_course
 {
 
@@ -16,6 +25,7 @@ public:
 
 private:
   using Trajectory = autoware_auto_planning_msgs::msg::Trajectory;
+  using TrajectoryPoint = autoware_auto_planning_msgs::msg::TrajectoryPoint;
   using AckermannControlCommand = autoware_auto_control_msgs::msg::AckermannControlCommand;
   using Odometry = nav_msgs::msg::Odometry;
   using Point = geometry_msgs::msg::Point;
@@ -23,11 +33,14 @@ private:
   void on_timer();
   void update_target_velocity(const Trajectory & msg);
   void update_current_state(const Odometry & msg);
+  void load_path(const std::string & file_path);
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<AckermannControlCommand>::SharedPtr pub_command_;
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<Odometry>::SharedPtr sub_kinematic_state_;
+  //std::vector<Point> trajectory_;
   Point current_pose_;
+  Trajectory trajectory_;
   double current_velocity_;
   double target_velocity_;
   double kp_;

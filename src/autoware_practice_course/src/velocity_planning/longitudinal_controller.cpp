@@ -1,6 +1,6 @@
 #include "longitudinal_controller.hpp"
-
 #include <memory>
+#include <algorithm> // std::remove_if, std::isspace
 
 namespace autoware_practice_course
 {
@@ -12,15 +12,67 @@ SampleNode::SampleNode() : Node("longitudinal_controller"), kp_(0.0)
   get_parameter("kp", kp_);
 
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
-  sub_trajectory_ = create_subscription<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1), std::bind(&SampleNode::update_target_velocity, this, _1));
+  //sub_trajectory_ = create_subscription<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1), std::bind(&SampleNode::update_target_velocity, this, _1));
   sub_kinematic_state_= create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
 
+  this->declare_parameter<std::string>("path_file", "path.csv"); // パラメータの宣言
+  auto path_file = this->get_parameter("path_file").as_string(); // パラメータの取得
+  load_path(path_file); // パスの読み込み
+  
+  
   const auto period = rclcpp::Rate(10).period();
+  
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
+  // on_timer()が一定間隔で呼ばれる。
 }
+
+
+void SampleNode::load_path(const std::string & file_path)
+{
+    std::ifstream file(file_path);
+    if (!file.is_open()) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to open file: %s", file_path.c_str());
+        return;
+    }
+
+    std::string line;
+    // ヘッダーをスキップ
+    std::getline(file, line);
+    RCLCPP_INFO(this->get_logger(), "Skipping header: %s", line.c_str());
+    
+    while (std::getline(file, line)) {
+        RCLCPP_INFO(this->get_logger(), "Processing line: %s", line.c_str());
+        TrajectoryPoint point;
+        std::stringstream ss(line);
+        std::string x, longitudinal_velocity_mps;
+        std::getline(ss, x, ',');
+        std::getline(ss, longitudinal_velocity_mps, ',');
+
+        // トリミング
+        x.erase(std::remove_if(x.begin(), x.end(), ::isspace), x.end());
+        longitudinal_velocity_mps.erase(std::remove_if(longitudinal_velocity_mps.begin(), longitudinal_velocity_mps.end(), ::isspace), longitudinal_velocity_mps.end());
+
+        try {
+            point.pose.position.x = std::stod(x);
+            point.longitudinal_velocity_mps = std::stod(longitudinal_velocity_mps);
+        } catch (const std::invalid_argument& e) {
+            RCLCPP_ERROR(this->get_logger(), "Invalid argument in line: %s", line.c_str());
+            continue; // エラーが発生した場合、その行をスキップ
+        } catch (const std::out_of_range& e) {
+            RCLCPP_ERROR(this->get_logger(), "Out of range error in line: %s", line.c_str());
+            continue; // エラーが発生した場合、その行をスキップ
+        }
+
+        trajectory_.points.push_back(point);
+    }
+    file.close();
+    
+}
+
 
 void SampleNode::update_target_velocity(const Trajectory & msg)
 {
+  
   double min_distance = std::numeric_limits<double>::max();
   size_t closest_waypoint_index = 0;
 
@@ -37,6 +89,7 @@ void SampleNode::update_target_velocity(const Trajectory & msg)
   }
 
   target_velocity_ = msg.points[closest_waypoint_index].longitudinal_velocity_mps;
+  RCLCPP_INFO(this->get_logger(), "Processing line: %f", target_velocity_);
 };
 
 void SampleNode::update_current_state(const Odometry & msg)
@@ -47,12 +100,17 @@ void SampleNode::update_current_state(const Odometry & msg)
 
 void SampleNode::on_timer()
 {
+  
+  update_target_velocity(trajectory_); // 目標速度を更新
+  
   const auto stamp = now();
+  
 
   AckermannControlCommand command;
   command.stamp = stamp;
   
   double velocity_error = target_velocity_ - current_velocity_;
+  RCLCPP_INFO(this->get_logger(), "velocity error: %f", velocity_error);
   command.longitudinal.acceleration = kp_ * velocity_error;
   command.longitudinal.speed = target_velocity_; // メッセージ型としてはspeedがあるが、vehiclle interface側では加速度しか受け取っていない。
   
@@ -60,6 +118,7 @@ void SampleNode::on_timer()
   
   pub_command_->publish(command);
 }
+
 
 } 
 
