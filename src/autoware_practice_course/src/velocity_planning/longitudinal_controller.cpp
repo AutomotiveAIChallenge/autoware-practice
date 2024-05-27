@@ -1,6 +1,7 @@
 #include "longitudinal_controller.hpp"
-#include <memory>
-#include <algorithm> // std::remove_if, std::isspace
+#include <string>
+#include <fstream>
+#include <sstream>
 
 namespace autoware_practice_course
 {
@@ -12,7 +13,6 @@ SampleNode::SampleNode() : Node("longitudinal_controller"), kp_(0.0)
   get_parameter("kp", kp_);
 
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
-  //sub_trajectory_ = create_subscription<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1), std::bind(&SampleNode::update_target_velocity, this, _1));
   sub_kinematic_state_= create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
 
   this->declare_parameter<std::string>("path_file", "path.csv"); // パラメータの宣言
@@ -36,7 +36,6 @@ void SampleNode::load_path(const std::string & file_path)
     }
 
     std::string line;
-    // ヘッダーをスキップ
     std::getline(file, line);
     RCLCPP_INFO(this->get_logger(), "Skipping header: %s", line.c_str());
     
@@ -47,26 +46,11 @@ void SampleNode::load_path(const std::string & file_path)
         std::string x, longitudinal_velocity_mps;
         std::getline(ss, x, ',');
         std::getline(ss, longitudinal_velocity_mps, ',');
-
-        // トリミング
-        x.erase(std::remove_if(x.begin(), x.end(), ::isspace), x.end());
-        longitudinal_velocity_mps.erase(std::remove_if(longitudinal_velocity_mps.begin(), longitudinal_velocity_mps.end(), ::isspace), longitudinal_velocity_mps.end());
-
-        try {
-            point.pose.position.x = std::stod(x);
-            point.longitudinal_velocity_mps = std::stod(longitudinal_velocity_mps);
-        } catch (const std::invalid_argument& e) {
-            RCLCPP_ERROR(this->get_logger(), "Invalid argument in line: %s", line.c_str());
-            continue; // エラーが発生した場合、その行をスキップ
-        } catch (const std::out_of_range& e) {
-            RCLCPP_ERROR(this->get_logger(), "Out of range error in line: %s", line.c_str());
-            continue; // エラーが発生した場合、その行をスキップ
-        }
-
+        point.pose.position.x = std::stod(x);
+        point.longitudinal_velocity_mps = std::stod(longitudinal_velocity_mps);
         trajectory_.points.push_back(point);
     }
     file.close();
-    
 }
 
 

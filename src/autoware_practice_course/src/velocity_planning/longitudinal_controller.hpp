@@ -2,14 +2,7 @@
 #define TRAJECTORY_PLANNER_HPP_
 
 #include <rclcpp/rclcpp.hpp>
-#include <chrono>
-#include <functional>
 #include <memory>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <sstream>
-
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
 #include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -36,9 +29,7 @@ private:
   void load_path(const std::string & file_path);
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<AckermannControlCommand>::SharedPtr pub_command_;
-  rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<Odometry>::SharedPtr sub_kinematic_state_;
-  //std::vector<Point> trajectory_;
   Point current_pose_;
   Trajectory trajectory_;
   double current_velocity_;
