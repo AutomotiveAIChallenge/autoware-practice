@@ -36,11 +36,35 @@ void SampleNode::load_path(const std::string & file_path)
         RCLCPP_INFO(this->get_logger(), "Processing line: %s", line.c_str());
         TrajectoryPoint point;
         std::stringstream ss(line);
-        std::string x, longitudinal_velocity_mps;
+        std::string x, y, z, orientation_x, orientation_y, orientation_z, orientation_w, longitudinal_velocity_mps, lateral_velocity_mps, acceleration_mps2, heading_rate_rps, front_wheel_angle_rad, rear_wheel_angle_rad;
         std::getline(ss, x, ',');
+        std::getline(ss, y, ',');
+        std::getline(ss, z, ',');
+        std::getline(ss, orientation_x, ',');
+        std::getline(ss, orientation_y, ',');
+        std::getline(ss, orientation_z, ',');
+        std::getline(ss, orientation_w, ',');
         std::getline(ss, longitudinal_velocity_mps, ',');
+        std::getline(ss, lateral_velocity_mps, ',');
+        std::getline(ss, acceleration_mps2, ',');
+        std::getline(ss, heading_rate_rps, ',');
+        std::getline(ss, front_wheel_angle_rad, ',');
+        std::getline(ss, rear_wheel_angle_rad, ',');
+
+
         point.pose.position.x = std::stod(x);
+        point.pose.position.y = std::stod(y);
+        point.pose.position.z = std::stod(z);
+        point.pose.orientation.x = std::stod(orientation_x);
+        point.pose.orientation.y = std::stod(orientation_y);
+        point.pose.orientation.z = std::stod(orientation_z);
+        point.pose.orientation.w = std::stod(orientation_w);
         point.longitudinal_velocity_mps = std::stod(longitudinal_velocity_mps);
+        point.lateral_velocity_mps = std::stod(lateral_velocity_mps);
+        point.acceleration_mps2 = std::stod(acceleration_mps2);
+        point.heading_rate_rps = std::stod(heading_rate_rps);
+        point.front_wheel_angle_rad = std::stod(front_wheel_angle_rad);
+        point.rear_wheel_angle_rad = std::stod(rear_wheel_angle_rad);
         trajectory_.points.push_back(point);
     }
     file.close();
