@@ -13,12 +13,11 @@ SampleNode::SampleNode() : Node("longitudinal_controller"), kp_(0.0)
   get_parameter("kp", kp_);
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   sub_kinematic_state_= create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
-  this->declare_parameter<std::string>("path_file", "path.csv"); // パラメータの宣言
-  auto path_file = this->get_parameter("path_file").as_string(); // パラメータの取得
-  load_path(path_file); // パスの読み込み
+  this->declare_parameter<std::string>("path_file", "path.csv");
+  auto path_file = this->get_parameter("path_file").as_string();
+  load_path(path_file);
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
-  // on_timer()が一定間隔で呼ばれる。
 }
 
 
@@ -93,20 +92,20 @@ void SampleNode::update_target_velocity(const Trajectory & msg)
 void SampleNode::update_current_state(const Odometry & msg)
 {
   current_velocity_ = msg.twist.twist.linear.x;
-  current_pose_ = msg.pose.pose.position;  // 現在の車両の位置を更新する
+  current_pose_ = msg.pose.pose.position;
 };
 
 void SampleNode::on_timer()
 {
   
-  update_target_velocity(trajectory_); // 目標速度を更新
+  update_target_velocity(trajectory_);
   const auto stamp = now();
   AckermannControlCommand command;
   command.stamp = stamp;
   double velocity_error = target_velocity_ - current_velocity_;
   RCLCPP_INFO(this->get_logger(), "velocity error: %f", velocity_error);
   command.longitudinal.acceleration = kp_ * velocity_error;
-  command.longitudinal.speed = target_velocity_; // メッセージ型としてはspeedがあるが、vehiclle interface側では加速度しか受け取っていない。
+  command.longitudinal.speed = target_velocity_;
   command.lateral.steering_tire_angle = 0.0;
   pub_command_->publish(command);
 }
