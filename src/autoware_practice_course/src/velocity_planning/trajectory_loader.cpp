@@ -10,22 +10,13 @@ namespace autoware_practice_course
 
 SampleNode::SampleNode() : Node("trajectory_loader")
 {
-  using std::placeholders::_1;
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
-  sub_kinematic_state_ = create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_vehicle_position, this, _1));
-  
   this->declare_parameter<std::string>("path_file", "path.csv");
   auto path_file = this->get_parameter("path_file").as_string();
   load_path(path_file);
-  RCLCPP_INFO(this->get_logger(), "complete loading trajectory");
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
-}
-
-void SampleNode::update_vehicle_position(const Odometry & msg)
-{
-  position_x_ = msg.pose.pose.position.x;
 }
 
 void SampleNode::on_timer()
