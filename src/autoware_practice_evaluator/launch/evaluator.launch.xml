@@ -3,6 +3,7 @@
   <node pkg="autoware_practice_evaluator" exec="evaluator" name="evaluator">
     <param name="judge_file" value="$(var judge_file)"/>
     <remap from="~/pose" to="/simulator/ground_truth/pose"/>
+    <remap from="~/twist" to="/simulator/ground_truth/twist"/>
     <remap from="~/path" to="/simulator/ground_truth/path"/>
   </node>
 </launch>
