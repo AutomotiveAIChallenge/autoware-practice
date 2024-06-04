@@ -54,7 +54,7 @@ void SampleNode::on_timer()
   pub_command_->publish(command);
 
   GearCommand gear;
-  command.stamp = stamp;
+  gear.stamp = stamp;
   gear.command = GearCommand::REVERSE;
   pub_gear_->publish(gear);
 }
