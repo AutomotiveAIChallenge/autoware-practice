@@ -3,6 +3,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <memory>
+#include <string>
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
 #include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -27,9 +28,10 @@ private:
   void on_timer();
   void update_target_velocity(const Trajectory & msg);
   void update_current_state(const Odometry & msg);
+  double load_parameters(const std::string & param_file, const std::string & param_tag);
   double longitudinal_controller(double veloctiy_error);
   double lateral_controller();
-  double calculateYawFromQuaternion(const geometry_msgs::msg::Quaternion& q);
+  double calculate_yaw_from_quaternion(const geometry_msgs::msg::Quaternion& q);
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<AckermannControlCommand>::SharedPtr pub_command_;
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
@@ -37,13 +39,13 @@ private:
   Trajectory trajectory_;
   Point current_position_;
   Quaternion current_orientation_;
-  
   double current_velocity_;
   double target_velocity_;
   double kp_;
   double lookahead_distance_;
   double wheel_base_;
   size_t closest_point_index_;
+  std::string param_file_;
 };
 
 } 
