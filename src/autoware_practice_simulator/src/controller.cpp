@@ -95,8 +95,8 @@ VehicleController::VehicleCommand VehicleController::create_command()
   }
 
   if (gear_ == GearReport::REVERSE) {
-    const auto accel = std::max(0.0, -target_accel_);
-    const auto brake = std::max(0.0, +target_accel_);
+    const auto accel = std::max(0.0, +target_accel_);
+    const auto brake = std::max(0.0, -target_accel_);
     const auto steer = target_steer_;
     return VehicleCommand{-1.0 * accel, brake, steer};
   }
@@ -129,7 +129,7 @@ void VehicleController::publish(const rclcpp::Time & stamp)
     msg.header.stamp = stamp;
     msg.header.frame_id = "base_link";
     msg.longitudinal_velocity = actual_speed_;
-    msg.lateral_velocity = 0.0;  
+    msg.lateral_velocity = 0.0;
     msg.heading_rate = heading_rate_;
     pub_velocity_->publish(msg);
   }
