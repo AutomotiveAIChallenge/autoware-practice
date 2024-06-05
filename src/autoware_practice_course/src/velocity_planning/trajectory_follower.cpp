@@ -45,7 +45,7 @@ void SampleNode::update_target_velocity(const Trajectory & msg)
   target_velocity_ = msg.points[closest_point_index_].longitudinal_velocity_mps;
 };
 
-double SampleNode::loadParameters(const std::string & param_file, const std::string & param_tag)
+double SampleNode::load_parameters(const std::string & param_file, const std::string & param_tag)
 {
   std::ifstream file(param_file);
   if (!file.is_open()) {
