@@ -19,6 +19,7 @@ ament_auto_add_executable(p_controller src/velocity_planning/p_controller.cpp)
 ament_auto_add_executable(trajectory_planner src/velocity_planning/trajectory_planner.cpp)
 ament_auto_add_executable(longitudinal_controller src/velocity_planning/longitudinal_controller.cpp)
 ament_auto_add_executable(trajectory_loader src/velocity_planning/trajectory_loader.cpp)
+ament_auto_add_executable(trajectory_follower src/velocity_planning/trajectory_follower.cpp)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
