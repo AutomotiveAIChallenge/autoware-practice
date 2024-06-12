@@ -10,7 +10,9 @@ SampleNode::SampleNode() : Node("simple_lidar_simulator")
     timer_ = create_wall_timer(
         //std::chrono::milliseconds(500),
         std::chrono::seconds(1), 
-        std::bind(&LidarNode::timer_callback, this));
+        std::bind(&SampleNode::timer_callback, this));
+    
+    
 }
 
 void SampleNode::timer_callback()
@@ -33,7 +35,7 @@ void SampleNode::timer_callback()
     publisher_->publish(output);
 }
 
-PointCloudXYZ::Ptr SampleNode::create_object_point_cloud(float x_center, float y_center, float width, float height, float resolution)
+pcl::PointCloud<pcl::PointXYZ>::Ptr SampleNode::create_object_point_cloud(float x_center, float y_center, float width, float height, float resolution)
 {
     auto cloud = std::make_shared<PointCloudXYZ>();
 
@@ -59,7 +61,7 @@ PointCloudXYZ::Ptr SampleNode::create_object_point_cloud(float x_center, float y
     return cloud;
 }
 
-PointCloudXYZ::Ptr SampleNode::filter_points_within_radius(PointCloudXYZ::Ptr cloud, float radius)
+pcl::PointCloud<pcl::PointXYZ>::Ptr SampleNode::filter_points_within_radius(PointCloudXYZ::Ptr cloud, float radius)
 {
     auto filtered_cloud = std::make_shared<PointCloudXYZ>();
     for (const auto& point : cloud->points)
