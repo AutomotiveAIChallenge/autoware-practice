@@ -24,6 +24,8 @@ private:
 
     rclcpp::Publisher<PointCloud2>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
+    std::vector<std::pair<float, float>> object_centers_;
+
 };
 
 }

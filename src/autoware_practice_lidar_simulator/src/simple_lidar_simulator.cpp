@@ -12,18 +12,26 @@ SampleNode::SampleNode() : Node("simple_lidar_simulator")
         std::chrono::seconds(1), 
         std::bind(&SampleNode::timer_callback, this));
     
-    
+    // 物体の中心位置リストを初期化
+    object_centers_ = {
+        {7.0, 0.0},
+        {10.0, 5.0},
+        {5.0, -3.0}
+    };
 }
+
+
 
 void SampleNode::timer_callback()
 {
-    // 物体の中心位置 (x_center, y_center)
-    float x_center = 7.0;  // 車両の前方1m
-    float y_center = 0.0;  // 車両の中心線上
+    auto cloud = std::make_shared<PointCloudXYZ>();
 
-    // 1m x 2mの物体の点群を生成
-    auto cloud = create_object_point_cloud(x_center, y_center, 3.0, 2.0, 0.5);
-
+    // 各物体の点群を生成
+    for (const auto& center : object_centers_)
+    {
+        auto object_cloud = create_object_point_cloud(center.first, center.second, 3.0, 2.0, 0.5);
+        *cloud += *object_cloud;
+    }
     // 車両から半径3m以内の点群を抽出
     auto filtered_cloud = filter_points_within_radius(cloud, 10.0);
 
