@@ -21,6 +21,7 @@ private:
     void timer_callback();
     PointCloudXYZ::Ptr create_object_point_cloud(float x_center, float y_center, float width, float height, float resolution);
     PointCloudXYZ::Ptr filter_points_within_radius(PointCloudXYZ::Ptr cloud, float radius);
+    std::vector<std::pair<float, float>> read_object_centers_from_csv(const std::string& file_path);
 
     rclcpp::Publisher<PointCloud2>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;

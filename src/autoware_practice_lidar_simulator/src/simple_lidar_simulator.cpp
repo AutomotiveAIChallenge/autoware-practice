@@ -1,5 +1,9 @@
 #include "simple_lidar_simulator.hpp"
 #include <pcl_conversions/pcl_conversions.h>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
 
 namespace autoware_practice_lidar_simulator
 {
@@ -12,14 +16,40 @@ SampleNode::SampleNode() : Node("simple_lidar_simulator")
         std::chrono::seconds(1), 
         std::bind(&SampleNode::timer_callback, this));
     
-    // 物体の中心位置リストを初期化
-    object_centers_ = {
-        {7.0, 0.0},
-        {10.0, 5.0},
-        {5.0, -3.0}
-    };
+    // 物体の中心位置リストをCSVから読み取って初期化
+    object_centers_ = read_object_centers_from_csv("src/autoware_practice_lidar_simulator/config/object_centers.csv");
 }
 
+std::vector<std::pair<float, float>> SampleNode::read_object_centers_from_csv(const std::string& file_path)
+{
+    std::vector<std::pair<float, float>> centers;
+    std::ifstream file(file_path);
+    if (!file.is_open()) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to open file: %s", file_path.c_str());
+        return centers;
+    }
+
+    std::string line;
+    std::getline(file, line);
+    RCLCPP_INFO(this->get_logger(), "Skipping header: %s", line.c_str());
+
+    while (std::getline(file, line))
+    {
+        RCLCPP_INFO(this->get_logger(), "Processing line: %s", line.c_str());
+        std::istringstream line_stream(line);
+        std::string x_str, y_str;
+
+        if (std::getline(line_stream, x_str, ',') && std::getline(line_stream, y_str, ','))
+        {
+            float x = std::stof(x_str);
+            float y = std::stof(y_str);
+            centers.emplace_back(x, y);
+        }
+    }
+    file.close();
+
+    return centers;
+}
 
 
 void SampleNode::timer_callback()
