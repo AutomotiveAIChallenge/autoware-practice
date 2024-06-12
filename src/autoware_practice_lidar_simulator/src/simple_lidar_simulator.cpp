@@ -16,10 +16,10 @@ SampleNode::SampleNode() : Node("simple_lidar_simulator")
     
 
     // 物体の中心位置リストをCSVから読み取って初期化
-    object_centers_ = read_object_centers_from_csv("src/autoware_practice_lidar_simulator/config/object_centers.csv");
+    object_centers_ = load_object_centers_from_csv("src/autoware_practice_lidar_simulator/config/object_centers.csv");
 }
 
-std::vector<std::pair<float, float>> SampleNode::read_object_centers_from_csv(const std::string& file_path)
+std::vector<std::pair<float, float>> SampleNode::load_object_centers_from_csv(const std::string& file_path)
 {
     std::vector<std::pair<float, float>> centers;
     std::ifstream file(file_path);
