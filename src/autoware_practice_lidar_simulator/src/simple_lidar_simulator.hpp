@@ -18,7 +18,7 @@ private:
     using PointCloud2 = sensor_msgs::msg::PointCloud2;
     using PointCloudXYZ = pcl::PointCloud<pcl::PointXYZ>;
     
-    void timer_callback();
+    void on_timer();
     PointCloudXYZ::Ptr create_object_point_cloud(float x_center, float y_center, float width, float height, float resolution);
     PointCloudXYZ::Ptr filter_points_within_radius(PointCloudXYZ::Ptr cloud, float radius);
     std::vector<std::pair<float, float>> read_object_centers_from_csv(const std::string& file_path);

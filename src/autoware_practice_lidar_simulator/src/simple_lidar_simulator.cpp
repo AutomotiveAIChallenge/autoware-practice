@@ -11,11 +11,10 @@ namespace autoware_practice_lidar_simulator
 SampleNode::SampleNode() : Node("simple_lidar_simulator")
 {
     publisher_ = create_publisher<sensor_msgs::msg::PointCloud2>("point_cloud", 10);
-    timer_ = create_wall_timer(
-        //std::chrono::milliseconds(500),
-        std::chrono::seconds(1), 
-        std::bind(&SampleNode::timer_callback, this));
+    const auto period = rclcpp::Rate(10).period();
+    timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
     
+
     // 物体の中心位置リストをCSVから読み取って初期化
     object_centers_ = read_object_centers_from_csv("src/autoware_practice_lidar_simulator/config/object_centers.csv");
 }
@@ -52,7 +51,7 @@ std::vector<std::pair<float, float>> SampleNode::read_object_centers_from_csv(co
 }
 
 
-void SampleNode::timer_callback()
+void SampleNode::on_timer()
 {
     auto cloud = std::make_shared<PointCloudXYZ>();
 
