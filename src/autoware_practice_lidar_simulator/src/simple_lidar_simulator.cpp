@@ -67,7 +67,7 @@ void SampleNode::on_timer()
         auto object_cloud = create_object_point_cloud(center.first, center.second, 3.0, 2.0, 0.5);
         *cloud += *object_cloud;
     }
-    // 車両から半径3m以内の点群を抽出
+    // 車両から半径10m以内の点群を抽出
     auto filtered_cloud = filter_points_within_radius(cloud, 10.0);
 
     sensor_msgs::msg::PointCloud2 output;
