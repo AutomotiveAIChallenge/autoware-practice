@@ -10,7 +10,7 @@ namespace autoware_practice_lidar_simulator
 
 SampleNode::SampleNode() : Node("simple_lidar_simulator")
 {
-    publisher_ = create_publisher<sensor_msgs::msg::PointCloud2>("/simulator/ground_truth/point_cloud", 10);
+    publisher_ = create_publisher<sensor_msgs::msg::PointCloud2>("/simulator/ground_truth/lidar0/pointcloud", 10);
     pose_subscriber_ = create_subscription<PoseStamped>(
         "/simulator/ground_truth/pose", 10, std::bind(&SampleNode::pose_callback, this, std::placeholders::_1));
     const auto period = rclcpp::Rate(10).period();

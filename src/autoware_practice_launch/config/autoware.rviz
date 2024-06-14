@@ -79,7 +79,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /simulator/ground_truth/point_cloud
+        Value: /sensing/lidar/concatenated/pointcloud
       Size (m): 0.1
       Value: true
   Enabled: true
