@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="autoware_practice_lidar_simulator" exec="simple_lidar_simulator" name="simple_lidar_simulator">
+  </node>
+</launch>
