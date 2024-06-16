@@ -26,4 +26,10 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+install(PROGRAMS
+  src/velocity_planning/scripts/run_autoware_practice_course_example02_02.sh
+  src/velocity_planning/scripts/run_autoware_practice_course_example02_03.sh
+  src/velocity_planning/scripts/run_autoware_practice_course_example02_04.sh
+  DESTINATION lib/${PROJECT_NAME}
+)
 ament_auto_package()
