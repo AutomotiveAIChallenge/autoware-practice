@@ -7,4 +7,5 @@
   <include file="$(find-pkg-share autoware_practice_driver)/launch/vehicle.launch.xml"/>
   <include file="$(find-pkg-share autoware_practice_simulator)/launch/simulator.launch.xml"/>
   <include file="$(find-pkg-share autoware_practice_evaluator)/launch/evaluator.launch.xml"/>
+  <include file="$(find-pkg-share autoware_practice_lidar_simulator)/launch/lidar_simulator.launch.xml"/>
 </launch>
