@@ -27,9 +27,9 @@ if(BUILD_TESTING)
 endif()
 
 install(PROGRAMS
-  src/velocity_planning/scripts/run_autoware_practice_course_example02_02.sh
-  src/velocity_planning/scripts/run_autoware_practice_course_example02_03.sh
-  src/velocity_planning/scripts/run_autoware_practice_course_example02_04.sh
+  src/velocity_planning/scripts/run_autoware_practice_cource_example02_02.sh
+  src/velocity_planning/scripts/run_autoware_practice_cource_example02_03.sh
+  src/velocity_planning/scripts/run_autoware_practice_cource_example02_04.sh
   DESTINATION lib/${PROJECT_NAME}
 )
 ament_auto_package()
