@@ -29,8 +29,10 @@ struct VehicleController::VehicleCommand
 VehicleController::VehicleController(rclcpp::Node & node, const VehicleSpecs & specs, VehicleKinematics * kinematics)
 {
   using std::placeholders::_1;
-  sub_control_ = node.create_subscription<ControlCommand>("~/command/control", rclcpp::QoS(1), std::bind(&VehicleController::on_command, this, _1));
-  sub_gear_ = node.create_subscription<GearCommand>("~/command/gear", rclcpp::QoS(1), std::bind(&VehicleController::on_gear, this, _1));
+  sub_control_ = node.create_subscription<ControlCommand>(
+    "~/command/control", rclcpp::QoS(1), std::bind(&VehicleController::on_command, this, _1));
+  sub_gear_ = node.create_subscription<GearCommand>(
+    "~/command/gear", rclcpp::QoS(1), std::bind(&VehicleController::on_gear, this, _1));
   pub_gear_ = node.create_publisher<GearReport>("~/status/gear", rclcpp::QoS(1));
   pub_velocity_ = node.create_publisher<VelocityReport>("~/status/velocity", rclcpp::QoS(1));
   pub_steering_ = node.create_publisher<SteeringReport>("~/status/steering", rclcpp::QoS(1));

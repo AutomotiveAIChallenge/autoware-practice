@@ -55,7 +55,7 @@ private:
   rclcpp::Publisher<VehiclePath>::SharedPtr pub_path_;
   rclcpp::Time last_time_;
   rclcpp::Time last_stamp_;
-  double last_angle_; 
+  double last_angle_;
   double time_resolution_;
 
   std::vector<PoseStamped> path_;

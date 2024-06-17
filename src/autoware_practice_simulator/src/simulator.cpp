@@ -60,7 +60,7 @@ Simulator::Simulator(const rclcpp::NodeOptions & options) : Node("simulator", op
     time_resolution_ = declare_parameter<double>("time_resolution");
     last_time_ = now();
     last_stamp_ = now();
-    last_angle_ = 0.0; // Initial angle is 0.
+    last_angle_ = 0.0;  // Initial angle is 0.
   }
 
   // Init simulation timer.
@@ -151,7 +151,7 @@ void Simulator::publish(const rclcpp::Time & stamp)
     // Update last recorded angle and timestamp for next iteration
     last_angle_ = state.angle;
     last_stamp_ = stamp;
-}
+  }
 
   // Vehicle path.
   {

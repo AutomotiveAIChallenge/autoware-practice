@@ -1,7 +1,21 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under #include <memory>the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "trajectory_planner.hpp"
 
-#include <memory>
 #include <cmath>
+#include <memory>
 
 namespace autoware_practice_course
 {
@@ -14,7 +28,8 @@ SampleNode::SampleNode() : Node("trajectory_planner")
   declare_parameter<double>("goal", 100.0);
   get_parameter("goal", goal_);
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
-  sub_kinematic_state_ = create_subscription<Odometry>("/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_vehicle_position, this, _1));
+  sub_kinematic_state_ = create_subscription<Odometry>(
+    "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_vehicle_position, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
@@ -40,7 +55,7 @@ void SampleNode::on_timer()
     point.time_from_start.nanosec = 0;
     point.pose.position.x = static_cast<double>(i);
     point.pose.position.y = 0.0;
-    point.pose.position.z = 0.0; 
+    point.pose.position.z = 0.0;
     point.pose.orientation.x = 0.0;
     point.pose.orientation.y = 0.0;
     point.pose.orientation.z = 0.0;
@@ -54,11 +69,11 @@ void SampleNode::on_timer()
     point.rear_wheel_angle_rad = 0.0;
     trajectory.points.push_back(point);
   }
-  
+
   pub_trajectory_->publish(trajectory);
 }
 
-} 
+}  // namespace autoware_practice_course
 
 int main(int argc, char ** argv)
 {

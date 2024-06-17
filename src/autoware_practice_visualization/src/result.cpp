@@ -35,8 +35,8 @@ void ResultPanel::onInitialize()
   auto lock = getDisplayContext()->getRosNodeAbstraction().lock();
   auto node = lock->get_raw_node();
 
-  sub_result_ =
-    node->create_subscription<JudgeStatus>("/evaluator/result", rclcpp::QoS(1), std::bind(&ResultPanel::onResult, this, std::placeholders::_1));
+  sub_result_ = node->create_subscription<JudgeStatus>(
+    "/evaluator/result", rclcpp::QoS(1), std::bind(&ResultPanel::onResult, this, std::placeholders::_1));
 }
 
 void ResultPanel::onResult(const JudgeStatus & msg)
