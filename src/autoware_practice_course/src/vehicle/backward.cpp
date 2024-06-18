@@ -26,7 +26,8 @@ SampleNode::SampleNode() : Node("backward")
   using std::placeholders::_1;
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   pub_gear_ = create_publisher<GearCommand>("/control/command/gear_cmd", rclcpp::QoS(1));
-  sub_gear_ = create_subscription<GearReport>("/vehicle/status/gear_status", rclcpp::QoS(1), std::bind(&SampleNode::on_gear, this, _1));
+  sub_gear_ = create_subscription<GearReport>(
+    "/vehicle/status/gear_status", rclcpp::QoS(1), std::bind(&SampleNode::on_gear, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });

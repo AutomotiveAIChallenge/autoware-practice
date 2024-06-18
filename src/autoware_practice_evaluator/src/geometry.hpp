@@ -39,8 +39,10 @@ struct LineString : public std::vector<Point>
 
 }  // namespace autoware_practice_evaluator
 
+// clang-format off
 BOOST_GEOMETRY_REGISTER_POINT_2D(autoware_practice_evaluator::Point, double, boost::geometry::cs::cartesian, x, y)  // NOLINT
-BOOST_GEOMETRY_REGISTER_RING(autoware_practice_evaluator::Polygon)                                                  // NOLINT
-BOOST_GEOMETRY_REGISTER_LINESTRING(autoware_practice_evaluator::LineString)                                         // NOLINT
+BOOST_GEOMETRY_REGISTER_RING(autoware_practice_evaluator::Polygon)
+BOOST_GEOMETRY_REGISTER_LINESTRING(autoware_practice_evaluator::LineString)
+// clang-format on
 
 #endif  // GEOMETRY_HPP_

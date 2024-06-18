@@ -19,8 +19,7 @@
     <param name="input_topic" value="/simulator/status/gear"/>
     <param name="output_topic" value="/vehicle/status/gear_status"/>
   </node>
-  <node pkg="autoware_practice_dummy_localizer" exec="dummy_localizer" name="dummy_localizer">
-  </node>
+  <node pkg="autoware_practice_dummy_localizer" exec="dummy_localizer" name="dummy_localizer"/>
   <node pkg="topic_tools" exec="relay" name="lidar_driver">
     <param name="input_topic" value="/simulator/ground_truth/lidar0/pointcloud"/>
     <param name="output_topic" value="/sensing/lidar/concatenated/pointcloud"/>

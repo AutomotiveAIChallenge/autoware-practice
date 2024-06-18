@@ -13,7 +13,7 @@ BraceWrapping:
   AfterStruct: true
   BeforeLambdaBody: true
 BreakBeforeBraces: Custom
-ColumnLimit: 150
+ColumnLimit: 120
 ConstructorInitializerIndentWidth: 0
 ContinuationIndentWidth: 2
 DerivePointerAlignment: false
