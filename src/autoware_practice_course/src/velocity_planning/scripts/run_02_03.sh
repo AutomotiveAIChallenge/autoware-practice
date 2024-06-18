@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 # Autoware_practice 第2章の02-03(速度計画)を一括実行するためのスクリプト
-source install/setup.bash 
+source install/setup.bash
 gnome-terminal -- ros2 launch autoware_practice_launch practice.launch.xml
 sleep 1s # ノード同時起動防止
 gnome-terminal -- ros2 run plotjuggler plotjuggler
