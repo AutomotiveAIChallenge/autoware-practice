@@ -25,6 +25,8 @@ ament_auto_add_executable(simple_lidar_simulator src/simple_lidar_simulator.cpp)
 
 target_link_libraries(simple_lidar_simulator ${PCL_LIBRARIES})
 
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
