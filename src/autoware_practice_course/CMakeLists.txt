@@ -13,6 +13,13 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
+find_package(PCL REQUIRED COMPONENTS common io)
+
+include_directories(
+  include
+  ${PCL_INCLUDE_DIRS}
+)
+
 ament_auto_add_executable(vehicle_forward  src/vehicle/forward.cpp)
 ament_auto_add_executable(vehicle_backward src/vehicle/backward.cpp)
 ament_auto_add_executable(p_controller src/velocity_planning/p_controller.cpp)
@@ -20,6 +27,8 @@ ament_auto_add_executable(longitudinal_controller src/velocity_planning/longitud
 ament_auto_add_executable(trajectory_loader src/velocity_planning/trajectory_loader.cpp)
 ament_auto_add_executable(trajectory_follower src/velocity_planning/trajectory_follower.cpp)
 ament_auto_add_executable(trajectory_planner src/avoidance/trajectory_planner.cpp)
+
+target_link_libraries(trajectory_planner ${PCL_LIBRARIES})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -19,58 +19,117 @@
 
 namespace autoware_practice_course
 {
-
+using Trajectory = autoware_auto_planning_msgs::msg::Trajectory;
 SampleNode::SampleNode() : Node("trajectory_planner")
 {
   using std::placeholders::_1;
 
-  goal_ = 100.0;
-  declare_parameter<double>("goal", 100.0);
-  get_parameter("goal", goal_);
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   sub_kinematic_state_ = create_subscription<Odometry>(
-    "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_vehicle_position, this, _1));
+    "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
+  sub_trajectory_ = create_subscription<Trajectory>(
+    "/planning/scenario_planning/trajectory", rclcpp::QoS(1),
+    std::bind(&SampleNode::update_reference_trajectory, this, _1));
+  sub_pointcloud_ = create_subscription<PointCloud2>(
+    "/perception/obstacle_segmentation/pointcloud", rclcpp::QoS(1),
+    std::bind(&SampleNode::update_pointcloud, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
 }
 
-void SampleNode::update_vehicle_position(const Odometry & msg)
+void SampleNode::update_current_state(const Odometry & msg)  // called by sub_kinematic_state_
 {
-  position_x_ = msg.pose.pose.position.x;
-}
+  current_velocity_ = msg.twist.twist.linear.x;
+  current_position_ = msg.pose.pose.position;
+  current_orientation_ = msg.pose.pose.orientation;
+};
+
+void SampleNode::update_reference_trajectory(const Trajectory & msg)  // called by sub_trajectory_
+{
+  reference_trajectory_ = msg;
+};
+
+void SampleNode::update_pointcloud(const PointCloud2 & msg)  // called by sub_pointcloud_
+{
+  pointcloud_ = msg;
+};
 
 void SampleNode::on_timer()
 {
-  const auto stamp = now();
+  Trajectory trajectory = create_trajectory();
+  pub_trajectory_->publish(trajectory);
+}
 
-  Trajectory trajectory;
-  trajectory.header.stamp = stamp;
-  trajectory.header.frame_id = "map";
-  int distance = static_cast<int>(std::floor(goal_));
+SampleNode::Trajectory SampleNode::create_trajectory()  // called by on_timer()
+{
+  // state lattice planner
+  // create trajectory library
+  std::vector<Trajectory> trajectory_set = create_trajectory_set();
 
-  for (int i = 1; i <= distance; ++i) {
-    TrajectoryPoint point;
-    point.time_from_start = rclcpp::Duration::from_seconds(i);
-    point.time_from_start.nanosec = 0;
-    point.pose.position.x = static_cast<double>(i);
-    point.pose.position.y = 0.0;
-    point.pose.position.z = 0.0;
-    point.pose.orientation.x = 0.0;
-    point.pose.orientation.y = 0.0;
-    point.pose.orientation.z = 0.0;
-    point.pose.orientation.w = 1.0;
-    double waypoint_i_x = static_cast<double>(i);
-    point.longitudinal_velocity_mps = (waypoint_i_x < 50) ? (0.2 * waypoint_i_x) : (-0.2 * waypoint_i_x + 20.0);
-    point.lateral_velocity_mps = 0.0;
-    point.acceleration_mps2 = 0.0;
-    point.heading_rate_rps = 0.0;
-    point.front_wheel_angle_rad = 0.0;
-    point.rear_wheel_angle_rad = 0.0;
-    trajectory.points.push_back(point);
+  // create costmap
+  std::vector<std::vector<float>> costmap = create_costmap();
+
+  // evaluate trahectories by the cost map
+  Trajectory best_trajectory = evaluate_trajectory(trajectory_set, costmap);
+
+  return best_trajectory;
+}
+
+std::vector<Trajectory> SampleNode::create_trajectory_set()
+{
+  std::vector<Trajectory> trajectory_set;
+  int state_num = 10;
+  // 目標trajectory pointを取得
+  TrajectoryPoint target_trajectory_point = calculate_target_trajectory_point();
+
+  // 目標trajectory pointから目標状態集合を計算
+  std::vector<TrajectoryPoint> traget_trajectory_point_set =
+    create_target_state_set(target_trajectory_point, state_num);
+
+  // 車両の位置姿勢と目標状態集合をエルミート補間し、軌道を生成
+  for (const auto & traget_trajectory_point : traget_trajectory_point_set) {
+    // 車両の位置姿勢と目標状態をエルミート補間
+
+    // 補間された曲線状のTrajectory Pointを生成
   }
 
-  pub_trajectory_->publish(trajectory);
+  return trajectory_set;
+}
+
+SampleNode::TrajectoryPoint SampleNode::calculate_target_trajectory_point()
+{
+  TrajectoryPoint target_trajectory_point;
+
+  // 車両に最も近いtrajectory pointを取得
+  TrajectoryPoint nearest_trajectory_point = calculate_nearest_trajectory_point();
+
+  // 10個先のtrajectory pointを取得
+
+  return target_trajectory_point;
+}
+
+std::vector<std::vector<float>> SampleNode::create_costmap()
+{
+  std::vector<std::vector<float>> costmap;
+  // pointcloud_を元にcostmapを生成
+
+  return costmap;
+}
+
+SampleNode::Trajectory SampleNode::evaluate_trajectory(
+  const std::vector<SampleNode::Trajectory> & trajectory_set, const std::vector<std::vector<float>> & costmap)
+{
+  Trajectory best_trajectory;
+  // trajectory_setをcostmapで評価し、最適な軌道を選択
+  for (const auto & trajectory : trajectory_set) {
+    // trajectoryをcostmapで評価
+
+    // 評価値を計算
+
+    // 評価値が最小の場合、best_trajectoryを更新
+  }
+  return best_trajectory;
 }
 
 }  // namespace autoware_practice_course
