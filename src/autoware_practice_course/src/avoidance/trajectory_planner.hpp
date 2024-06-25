@@ -15,6 +15,8 @@
 #ifndef AVOIDANCE__TRAJECTORY_PLANNER_HPP_
 #define AVOIDANCE__TRAJECTORY_PLANNER_HPP_
 
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 #include <rclcpp/rclcpp.hpp>
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
 #include <autoware_auto_planning_msgs/msg/trajectory_point.hpp>
