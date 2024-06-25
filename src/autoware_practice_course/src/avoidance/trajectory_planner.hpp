@@ -71,12 +71,18 @@ private:
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_pointcloud_;
 
   double GRID_RESOLUTION_;
+  double GRID_WIDTH_;
+  double GRID_HEIGHT_;
   PointCloud2 pointcloud_;
   Point current_position_;
   Quaternion current_orientation_;
   double current_velocity_;
   Trajectory reference_trajectory_;
   int state_num_;
+
+  bool current_state_initialized_ = false;
+  bool reference_trajectory_initialized_ = false;
+  bool pointcloud_initialized_ = false;
 };
 
 }  // namespace autoware_practice_course
