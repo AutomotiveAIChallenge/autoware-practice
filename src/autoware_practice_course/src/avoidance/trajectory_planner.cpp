@@ -23,11 +23,12 @@
 
 namespace autoware_practice_course
 {
-using Trajectory = autoware_auto_planning_msgs::msg::Trajectory;
+
 SampleNode::SampleNode() : Node("trajectory_planner")
 {
   using std::placeholders::_1;
-  GRID_RESOLUTION_ = 1;  // 1セルのサイズ（メートル）
+  GRID_RESOLUTION_ = 1.0;  // 1セルのサイズ（メートル）
+  state_num_ = 10;
 
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   sub_kinematic_state_ = create_subscription<Odometry>(
@@ -81,16 +82,14 @@ SampleNode::Trajectory SampleNode::create_trajectory()  // called by on_timer()
   return best_trajectory;
 }
 
-std::vector<Trajectory> SampleNode::create_trajectory_set()
+std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
 {
-  int state_num = 10;
-
   // 目標状態集合を計算
-  std::vector<TrajectoryPoint> traget_trajectory_point_set = create_target_state_set(state_num);
+  std::vector<TrajectoryPoint> target_trajectory_point_set = create_target_state_set();
 
   std::vector<Trajectory> trajectory_set;
-  Quaterniond current_q;
-  Quaterniond target_q;
+  Eigen::Quaterniond current_q;
+  Eigen::Quaterniond target_q;
 
   current_q.x() = current_orientation_.x;
   current_q.y() = current_orientation_.y;
@@ -102,15 +101,15 @@ std::vector<Trajectory> SampleNode::create_trajectory_set()
   target_q.z() = target_trajectory_point_set[1].pose.orientation.z;
   target_q.w() = target_trajectory_point_set[1].pose.orientation.w;
 
-  double current_inclination quaternionToInclination(target_q);
-  double target_inclination quaternionToInclination(target_q);
+  double current_inclination = quaternionToInclination(current_q);
+  double target_inclination = quaternionToInclination(target_q);
 
   // 車両の位置姿勢と目標状態集合をエルミート補間し、軌道を生成
-  for (const auto & target_trajectory_point : traget_trajectory_point_set) {
+  for (const auto & target_trajectory_point : target_trajectory_point_set) {
     double num_points = 10;
     // 車両の位置姿勢と目標状態をエルミート補間
     std::vector<Point> interpolated_points = hermiteInterpolate(
-      current_position_, current_inclination, target_trajectory_point.pose.postion, target_inclination, num_points);
+      current_position_, target_trajectory_point.pose.position, current_inclination, target_inclination, num_points);
     Trajectory trajectory_candidate;
 
     // 補間された曲線状のstd::vector<Point>をTrajectoryに変換
@@ -128,7 +127,7 @@ std::vector<Trajectory> SampleNode::create_trajectory_set()
 }
 
 // 目標状態集合を計算
-std::vector<TrajectoryPoint> traget_trajectory_point_set = create_target_state_set(int state_num)
+std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::create_target_state_set()
 {
   // 車両に最も近いtrajectory pointを取得
   double min_distance = std::numeric_limits<double>::max();
@@ -149,56 +148,74 @@ std::vector<TrajectoryPoint> traget_trajectory_point_set = create_target_state_s
   // 10個先のtrajectory pointを取得
   TrajectoryPoint target_trajectory_point = reference_trajectory_.points[target_trajectory_point_index];
 
-  Quaterniond q = vectorToQuaternion3D(
+  Eigen::Quaterniond q = vectorToQuaternion(
     pointToVector3d(reference_trajectory_.points[target_trajectory_point_index].pose.position),
     pointToVector3d(reference_trajectory_.points[target_trajectory_point_index + 1].pose.position));
-  traget_trajectory_point.pose.orientation.x = q.x();
-  traget_trajectory_point.pose.orientation.y = q.y();
-  traget_trajectory_point.pose.orientation.z = q.z();
-  traget_trajectory_point.pose.orientation.w = q.w();
+  target_trajectory_point.pose.orientation.x = q.x();
+  target_trajectory_point.pose.orientation.y = q.y();
+  target_trajectory_point.pose.orientation.z = q.z();
+  target_trajectory_point.pose.orientation.w = q.w();
 
   // 目標状態集合を生成
   // target_trajectory_pointの姿勢に直交する方向に並ぶstate_num個の状態を生成
   // クォータニオンを回転行列に変換
-  Matrix3d R = q.toRotationMatrix();
+  Eigen::Matrix3d R = q.toRotationMatrix();
 
   // 直交するベクトルの選択（第二列ベクトル）
-  Vector3d v = R.col(1);
+  Eigen::Vector3d v = R.col(1);
   // 点の配置
   double d = 1.0;  // 点と点の間の距離
   std::vector<TrajectoryPoint> target_state_set;
   for (int n = -4; n <= 5; ++n) {
     TrajectoryPoint target_state = target_trajectory_point;
-    target_state.pose.position += n * d * v;
-    target_state_set.push_back(target_state)
+    target_state.pose.position = target_trajectory_point.pose.position + vector3dToPoint(n * d * v);
+    target_state_set.push_back(target_state);
   }
 
   return target_state_set;
 }
 
-//
-Eigen::Vector3d pointToVector3d(const geometry_msgs::Point & point)
+// + 演算子のオーバーロード
+geometry_msgs::msg::Point operator+(const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Point & p2)
+{
+  geometry_msgs::msg::Point result;
+  result.x = p1.x + p2.x;
+  result.y = p1.y + p2.y;
+  result.z = p1.z + p2.z;
+  return result;
+}
+
+Eigen::Vector3d SampleNode::pointToVector3d(const geometry_msgs::msg::Point & point)
 {
   return Eigen::Vector3d(point.x, point.y, point.z);
 }
 
-Quaterniond vectorToQuaternion(const Vector3d & start, const Vector3d & end)
+geometry_msgs::msg::Point SampleNode::vector3dToPoint(const Eigen::Vector3d & vector)
+{
+  geometry_msgs::msg::Point point;
+  point.x = vector.x();
+  point.y = vector.y();
+  point.z = vector.z();
+  return point;
+}
+
+Eigen::Quaterniond SampleNode::vectorToQuaternion(const Eigen::Vector3d & start, const Eigen::Vector3d & end)
 {
   // 方向ベクトルの計算
-  Vector3d direction = (end - start).normalized();
+  Eigen::Vector3d direction = (end - start).normalized();
 
   // 基準ベクトル（例：x軸）
-  Vector3d referenceVector(1.0, 0.0, 0.0);
+  Eigen::Vector3d referenceVector(1.0, 0.0, 0.0);
 
   // 回転軸の計算
-  Vector3d axis = referenceVector.cross(direction);
+  Eigen::Vector3d axis = referenceVector.cross(direction);
   axis.normalize();
 
   // 回転角度の計算
   double angle = acos(referenceVector.dot(direction));
 
   // 回転をクォータニオンに変換
-  Quaterniond q(AngleAxisd(angle, axis));
+  Eigen::Quaterniond q(Eigen::AngleAxisd(angle, axis));
   return q;
 }
 
@@ -209,8 +226,8 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
   pcl::fromROSMsg(pointcloud_, *pointcloud_pcl);
   // pointcloud_を元にcostmapを生成
   // グリッドマップの初期化
-  const int GRID_WIDTH = 100;
-  const int GRID_HEIGHT = 100;
+  const double GRID_WIDTH = 100.0;
+  const double GRID_HEIGHT = 100.0;
 
   std::vector<std::vector<float>> costmap(GRID_WIDTH, std::vector<float>(GRID_HEIGHT, 0.0));
 
@@ -259,7 +276,7 @@ SampleNode::Trajectory SampleNode::evaluate_trajectory(
     for (const auto & trajectory_point : trajectory_candidate.points) {
       int x_index = static_cast<int>(trajectory_point.pose.position.x / GRID_RESOLUTION_);
       int y_index = static_cast<int>(trajectory_point.pose.position.y / GRID_RESOLUTION_);
-      trajectory_cost[iterator] += costmap[x_index][y_index];
+      trajectory_cost[index] += costmap[x_index][y_index];
     }
     index++;
     // 評価値を計算
@@ -272,20 +289,20 @@ SampleNode::Trajectory SampleNode::evaluate_trajectory(
   return best_trajectory;
 }
 
-double quaternionToInclination(Quaterniond q)
+double SampleNode::quaternionToInclination(Eigen::Quaterniond q)
 {
   double inclination = 2.0 * std::atan2(q.z(), q.w());
-  return inclination
+  return inclination;
 }
 
 // エルミート補間関数
-vector<geometry_msgs::Point> hermiteInterpolate(
-  const geometry_msgs::Point & p0, const geometry_msgs::Point & p1, double m0, double m1, int numPoints)
+std::vector<geometry_msgs::msg::Point> SampleNode::hermiteInterpolate(
+  const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1, double m0, double m1, int numPoints)
 {
-  vector<geometry_msgs::Point> interpolatedPoints;
+  std::vector<geometry_msgs::msg::Point> interpolatedPoints;
 
-  Vector3d v0 = pointToVector3d(p0);
-  Vector3d v1 = pointToVector3d(p1);
+  Eigen::Vector3d v0 = pointToVector3d(p0);
+  Eigen::Vector3d v1 = pointToVector3d(p1);
 
   for (int i = 0; i < numPoints; ++i) {
     double t = static_cast<double>(i) / (numPoints - 1);
@@ -297,9 +314,9 @@ vector<geometry_msgs::Point> hermiteInterpolate(
     double h01 = -2 * t3 + 3 * t2;
     double h11 = t3 - t2;
 
-    Vector3d interpolatedVector = h00 * v0 + h10 * m0 * (v1 - v0) + h01 * v1 + h11 * m1 * (v1 - v0);
+    Eigen::Vector3d interpolatedVector = h00 * v0 + h10 * m0 * (v1 - v0) + h01 * v1 + h11 * m1 * (v1 - v0);
 
-    geometry_msgs::Point point;
+    geometry_msgs::msg::Point point;
     point.x = interpolatedVector.x();
     point.y = interpolatedVector.y();
     point.z = interpolatedVector.z();
