@@ -82,6 +82,36 @@ Visualization Manager:
         Value: /sensing/lidar/concatenated/pointcloud
       Size (m): 0.1
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: TrajectoryMarkers
+      Namespaces: {}
+      Topic:
+        Value: /trajectory_marker
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Qos Overrides:
+          /parameter_events:
+            Depth: 1000
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: TrajectoryMarkers
+      Namespaces: {}
+      Topic:
+        Value: /reference_trajectory_marker
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Qos Overrides:
+          /parameter_events:
+            Depth: 1000
+            Durability Policy: Volatile
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+      Value: true
   Enabled: true
 
   Global Options:
