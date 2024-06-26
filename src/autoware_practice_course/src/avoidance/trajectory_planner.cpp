@@ -27,7 +27,7 @@ namespace autoware_practice_course
 SampleNode::SampleNode() : Node("trajectory_planner")
 {
   using std::placeholders::_1;
-  GRID_RESOLUTION_ = 1.0;  // 1セルのサイズ（メートル）
+  GRID_RESOLUTION_ = 3;  // 1セルのサイズ（メートル）
   GRID_WIDTH_ = 100.0;
   GRID_HEIGHT_ = 100.0;
   state_num_ = 10;
@@ -64,10 +64,6 @@ void SampleNode::update_reference_trajectory(const Trajectory & msg)  // called 
 
 void SampleNode::update_pointcloud(const PointCloud2 & msg)  // called by sub_pointcloud_
 {
-  if (msg.data.empty()) {
-    RCLCPP_ERROR(this->get_logger(), "Received empty pointcloud message");
-    return;
-  }
   pointcloud_ = msg;
   pointcloud_initialized_ = true;
   RCLCPP_INFO(this->get_logger(), "PointCloud received and updated.");
@@ -96,7 +92,13 @@ SampleNode::Trajectory SampleNode::create_trajectory()  // called by on_timer()
 
   // evaluate trahectories by the cost map
   Trajectory best_trajectory = evaluate_trajectory(trajectory_set, costmap);
-  RCLCPP_INFO(this->get_logger(), "Finished creating trajectory.");
+  RCLCPP_INFO(this->get_logger(), "Logging trajectory with %zu points", best_trajectory.points.size());
+  for (size_t i = 0; i < best_trajectory.points.size(); ++i) {
+    const auto & point = best_trajectory.points[i];
+    RCLCPP_INFO(
+      this->get_logger(), "Point %zu: x=%f, y=%f, z=%f", i, point.pose.position.x, point.pose.position.y,
+      point.pose.position.z);
+  }
 
   return best_trajectory;
 }
@@ -158,6 +160,7 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
     for (const auto & interpolated_point : interpolated_points) {
       TrajectoryPoint trajectory_point;
       trajectory_point.pose.position = interpolated_point;
+      trajectory_point.longitudinal_velocity_mps = 2.0;
       trajectory_candidate.points.push_back(trajectory_point);
 
       RCLCPP_INFO(
@@ -316,11 +319,9 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
   // 点群をグリッドマップに変換
   for (const auto & point : pointcloud_pcl->points) {
     int x_index = static_cast<int>(point.x / GRID_RESOLUTION_);
-    int y_index = static_cast<int>(point.y / GRID_RESOLUTION_);
+    int y_index = static_cast<int>((point.y + GRID_RESOLUTION_ / 2) / GRID_RESOLUTION_);
 
-    if (
-      x_index >= -GRID_WIDTH_ / 2 && x_index < GRID_WIDTH_ / 2 && y_index >= -GRID_HEIGHT_ / 2 &&
-      y_index < GRID_HEIGHT_ / 2) {
+    if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
       costmap[x_index][y_index] = 100.0;  // 点が存在する格子は評価関数を高く設定
     }
   }
@@ -362,12 +363,10 @@ SampleNode::Trajectory SampleNode::evaluate_trajectory(
     // trajectoryをcostmapで評価
     for (const auto & trajectory_point : trajectory_candidate.points) {
       int x_index = static_cast<int>(trajectory_point.pose.position.x / GRID_RESOLUTION_);
-      int y_index = static_cast<int>(trajectory_point.pose.position.y / GRID_RESOLUTION_);
+      int y_index = static_cast<int>((trajectory_point.pose.position.y + GRID_RESOLUTION_ / 2) / GRID_RESOLUTION_);
       RCLCPP_INFO(this->get_logger(), "x_index=%d, y_index=%d", x_index, y_index);
 
-      if (
-        x_index >= -GRID_WIDTH_ / 2 && x_index < GRID_WIDTH_ / 2 && y_index >= -GRID_HEIGHT_ / 2 &&
-        y_index < GRID_HEIGHT_ / 2) {
+      if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
         trajectory_cost[index] += costmap[x_index][y_index];
       } else {
         RCLCPP_WARN(

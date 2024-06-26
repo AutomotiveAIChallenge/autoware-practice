@@ -14,6 +14,7 @@ find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
 find_package(PCL REQUIRED COMPONENTS common io)
+find_package(visualization_msgs REQUIRED)  # 追加
 
 include_directories(
   include
@@ -27,8 +28,10 @@ ament_auto_add_executable(longitudinal_controller src/velocity_planning/longitud
 ament_auto_add_executable(trajectory_loader src/velocity_planning/trajectory_loader.cpp)
 ament_auto_add_executable(trajectory_follower src/velocity_planning/trajectory_follower.cpp)
 ament_auto_add_executable(trajectory_planner src/avoidance/trajectory_planner.cpp)
+ament_auto_add_executable(trajectory_visualizer src/avoidance/marker.cpp)
 
 target_link_libraries(trajectory_planner ${PCL_LIBRARIES})
+target_link_libraries(trajectory_visualizer ${visualization_msgs_LIBRARIES})  # 追加
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
