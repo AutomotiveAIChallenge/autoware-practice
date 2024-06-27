@@ -14,6 +14,8 @@
 
 #include "simple_lidar_simulator.hpp"
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <fstream>
@@ -35,7 +37,8 @@ SampleNode::SampleNode() : Node("simple_lidar_simulator")
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
 
   // 物体の中心位置リストをCSVから読み取って初期化
-  object_centers_ = load_object_centers_from_csv("src/autoware_practice_lidar_simulator/config/object_centers.csv");
+  const auto pkg_path = ament_index_cpp::get_package_share_directory("autoware_practice_lidar_simulator");
+  object_centers_ = load_object_centers_from_csv(pkg_path + "/config/object_centers.csv");
 }
 
 void SampleNode::pose_callback(const PoseStamped::SharedPtr msg)
