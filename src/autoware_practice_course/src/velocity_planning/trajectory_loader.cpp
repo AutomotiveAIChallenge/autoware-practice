@@ -25,7 +25,7 @@ namespace autoware_practice_course
 
 SampleNode::SampleNode() : Node("trajectory_loader")
 {
-  pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
+  pub_trajectory_ = create_publisher<Trajectory>("/planning/trajectory_loader/trajectory", rclcpp::QoS(1));
   this->declare_parameter<std::string>("path_file", "path.csv");
   auto path_file = this->get_parameter("path_file").as_string();
   load_path(path_file);
