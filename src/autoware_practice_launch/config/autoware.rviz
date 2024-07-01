@@ -59,6 +59,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /simulator/markers
       Value: true
+
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: MarkerArray
@@ -97,6 +98,7 @@ Visualization Manager:
             History Policy: Keep Last
             Reliability Policy: Reliable
       Value: true
+
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: TrajectoryMarkers
