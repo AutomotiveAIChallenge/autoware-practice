@@ -90,8 +90,6 @@ void SampleNode::create_trajectory()  // called by on_timer()
   //  create trajectory library
   std::vector<Trajectory> trajectory_set = create_trajectory_set();
 
-  trajectory_candidate_ = trajectory_set[0];
-
   // create costmap
   std::vector<std::vector<float>> costmap = create_costmap();
 
@@ -152,7 +150,7 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
   */
 
   // 車両の位置姿勢と目標状態集合をエルミート補間し、軌道を生成
-  trajectory_candidate_.points.clear();
+  Trajectory trajectory_candidate;
   for (const auto & target_trajectory_point : target_trajectory_point_set) {
     /*
     RCLCPP_INFO(
@@ -167,15 +165,15 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
     std::vector<Point> interpolated_points = hermiteInterpolate(
       current_position_, target_trajectory_point.pose.position, current_vector, target_vector, num_points);
 
-    Trajectory trajectory_candidate;
+    Trajectory trajectorys;
 
     // 補間された曲線状のstd::vector<Point>をTrajectoryに変換
     for (const auto & interpolated_point : interpolated_points) {
       TrajectoryPoint trajectory_point;
       trajectory_point.pose.position = interpolated_point;
       trajectory_point.longitudinal_velocity_mps = 2.0;
+      trajectorys.points.push_back(trajectory_point);
       trajectory_candidate.points.push_back(trajectory_point);
-      trajectory_candidate_.points.push_back(trajectory_point);
       /*
             RCLCPP_INFO(
               this->get_logger(), "Added interpolated point to trajectory candidate. Point position: (%f, %f, %f)",
@@ -189,13 +187,14 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
        trajectory_candidate.points.size());
     */
     // 補間された曲線状のTrajectory Pointを生成
-    trajectory_set.push_back(trajectory_candidate);
+    trajectory_set.push_back(trajectorys);
     /*
         RCLCPP_INFO(
           this->get_logger(), "Added trajectory candidate to trajectory set. Current trajectory set size: %zu",
           trajectory_set.size());
     */
   }
+  trajectory_candidate_ = trajectory_candidate;
 
   // RCLCPP_INFO(this->get_logger(), "Trajectory set created. Size: %zu", trajectory_set.size());
 

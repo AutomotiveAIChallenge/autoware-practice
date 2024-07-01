@@ -27,10 +27,15 @@ public:
     reference_trajectory_sub_ = this->create_subscription<autoware_auto_planning_msgs::msg::Trajectory>(
       "/planning/trajectory_loader/trajectory", 10,
       std::bind(&TrajectoryVisualizer::reference_trajectoryCallback, this, std::placeholders::_1));
+    trajectory_candidate_sub_ = this->create_subscription<autoware_auto_planning_msgs::msg::Trajectory>(
+      "/planning/scenario_planning/trajectory_candidate", 10,
+      std::bind(&TrajectoryVisualizer::trajectory_candidateCallback, this, std::placeholders::_1));
 
     marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/trajectory_marker", 10);
     reference_marker_pub_ =
       this->create_publisher<visualization_msgs::msg::MarkerArray>("/reference_trajectory_marker", 10);
+    candidate_marker_pub_ =
+      this->create_publisher<visualization_msgs::msg::MarkerArray>("/candidate_trajectory_marker", 10);
   }
 
 private:
@@ -96,10 +101,42 @@ private:
     reference_marker_pub_->publish(marker_array);
   }
 
+  void trajectory_candidateCallback(const autoware_auto_planning_msgs::msg::Trajectory::SharedPtr msg)
+  {
+    visualization_msgs::msg::MarkerArray marker_array;
+
+    for (size_t i = 0; i < msg->points.size(); ++i) {
+      visualization_msgs::msg::Marker marker;
+      marker.header = msg->header;
+      marker.header.frame_id = "map";  // 適切なフレームIDを設定
+      marker.ns = "trajectory";
+      marker.id = i;
+      marker.type = visualization_msgs::msg::Marker::SPHERE;
+      marker.action = visualization_msgs::msg::Marker::ADD;
+
+      marker.pose.position = msg->points[i].pose.position;
+      marker.pose.orientation.w = 1.0;
+
+      marker.scale.x = 0.2;
+      marker.scale.y = 0.2;
+      marker.scale.z = 0.2;
+
+      marker.color.r = 0.0;
+      marker.color.g = 0.0;
+      marker.color.b = 1.0;
+      marker.color.a = 1.0;
+
+      marker_array.markers.push_back(marker);
+    }
+
+    candidate_marker_pub_->publish(marker_array);
+  }
   rclcpp::Subscription<autoware_auto_planning_msgs::msg::Trajectory>::SharedPtr trajectory_sub_;
   rclcpp::Subscription<autoware_auto_planning_msgs::msg::Trajectory>::SharedPtr reference_trajectory_sub_;
+  rclcpp::Subscription<autoware_auto_planning_msgs::msg::Trajectory>::SharedPtr trajectory_candidate_sub_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr reference_marker_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr candidate_marker_pub_;
 };
 
 int main(int argc, char ** argv)
