@@ -147,10 +147,9 @@ private:
         size_t index = y + x * msg->height;
         if (index >= msg->data.size()) continue;  // 安全対策
         float cost = msg->data[index];
-        if (cost > 100) {
+        if (cost > 100.0) {
           RCLCPP_INFO(this->get_logger(), "index: %ld cost: %f", index, cost);  // コスト値の表示（デバッグ用
         }
-        RCLCPP_INFO(this->get_logger(), "index: %ld cost: %f", index, cost);  // コスト値の表示（デバッグ用
 
         visualization_msgs::msg::Marker marker;
         marker.header.frame_id = "map";  // 適切なフレームIDを設定
@@ -168,8 +167,8 @@ private:
         marker.scale.y = resolution;
         marker.scale.z = 0.1;
 
-        marker.color.r = cost / 100;  // コスト値に基づく色の設定（適宜調整）
-        marker.color.g = 1.0 - cost / 100;
+        marker.color.r = cost / 1000;  // コスト値に基づく色の設定（適宜調整）
+        marker.color.g = 1.0 - cost / 1000;
         marker.color.b = 0.0;
         marker.color.a = 0.5;
 
