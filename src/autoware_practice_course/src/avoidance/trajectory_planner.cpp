@@ -265,7 +265,7 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::creat
     // 点の配置
     double d = 1.0;  // 点と点の間の距離
     std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> target_state_set;
-    for (int n = -4; n <= 5; ++n) {
+    for (int n = -4; n <= 4; ++n) {
       autoware_auto_planning_msgs::msg::TrajectoryPoint target_state = target_trajectory_point;
       target_state.pose.position.x += n * d * v.x();
       target_state.pose.position.y += n * d * v.y();
@@ -340,19 +340,19 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
   // 点群をグリッドマップに変換
   for (const auto & point : pointcloud_pcl->points) {
     int x_index = static_cast<int>(point.x / GRID_RESOLUTION_);
-    int y_index = static_cast<int>((point.y + GRID_RESOLUTION_ / 2) / GRID_RESOLUTION_);
+    int y_index = static_cast<int>((point.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
 
     if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
       costmap[x_index][y_index] = 100.0;  // 点が存在する格子は評価関数を高く設定
     }
   }
   // 周囲の格子に評価関数を設定
-  const int KERNEL_SIZE = 1;           // 評価関数を設定する範囲（カーネルサイズ）
-  const float SURROUNDING_COST = 0.5;  // 周囲の格子の評価関数
+  const int KERNEL_SIZE = 1;            // 評価関数を設定する範囲（カーネルサイズ）
+  const float SURROUNDING_COST = 50.0;  // 周囲の格子の評価関数
 
   for (int x = 0; x < GRID_WIDTH_; ++x) {
     for (int y = 0; y < GRID_HEIGHT_; ++y) {
-      if (costmap[x][y] == 1.0) {
+      if (costmap[x][y] == 100.0) {
         for (int dx = -KERNEL_SIZE; dx <= KERNEL_SIZE; ++dx) {
           for (int dy = -KERNEL_SIZE; dy <= KERNEL_SIZE; ++dy) {
             int nx = x + dx;
@@ -363,6 +363,16 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
           }
         }
       }
+    }
+  }
+
+  const float REFERENCE_TRAJECTORY_COST = -1;  // reference_trajectoryの格子の評価関数
+  for (const auto & point : reference_trajectory_.points) {
+    int x_index = static_cast<int>(point.pose.position.x / GRID_RESOLUTION_);
+    int y_index = static_cast<int>((point.pose.position.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
+
+    if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
+      costmap[x_index][y_index] += REFERENCE_TRAJECTORY_COST;
     }
   }
 
@@ -384,7 +394,7 @@ SampleNode::Trajectory SampleNode::evaluate_trajectory(
     // trajectoryをcostmapで評価
     for (const auto & trajectory_point : trajectory_candidate.points) {
       int x_index = static_cast<int>(trajectory_point.pose.position.x / GRID_RESOLUTION_);
-      int y_index = static_cast<int>((trajectory_point.pose.position.y + GRID_RESOLUTION_ / 2) / GRID_RESOLUTION_);
+      int y_index = static_cast<int>((trajectory_point.pose.position.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
       // RCLCPP_INFO(this->get_logger(), "x_index=%d, y_index=%d", x_index, y_index);
 
       if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {

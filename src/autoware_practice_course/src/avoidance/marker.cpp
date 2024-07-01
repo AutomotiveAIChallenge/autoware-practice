@@ -55,9 +55,9 @@ private:
       marker.pose.position = msg->points[i].pose.position;
       marker.pose.orientation.w = 1.0;
 
-      marker.scale.x = 0.2;
-      marker.scale.y = 0.2;
-      marker.scale.z = 0.2;
+      marker.scale.x = 0.5;
+      marker.scale.y = 0.5;
+      marker.scale.z = 0.5;
 
       marker.color.r = 1.0;
       marker.color.g = 0.0;
