@@ -12,6 +12,7 @@
   <depend>autoware_auto_control_msgs</depend>
   <depend>autoware_auto_planning_msgs</depend>
   <depend>autoware_auto_vehicle_msgs</depend>
+  <depend>autoware_practice_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>

@@ -35,6 +35,8 @@ SampleNode::SampleNode() : Node("trajectory_planner")
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   pub_trajectory_candidate_ =
     create_publisher<Trajectory>("/planning/scenario_planning/trajectory_candidate", rclcpp::QoS(1));
+  pub_costmap_ =
+    create_publisher<autoware_practice_msgs::msg::FloatGrid>("/planning/scenario_planning/costmap", rclcpp::QoS(1));
   sub_kinematic_state_ = create_subscription<Odometry>(
     "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
   sub_trajectory_ = create_subscription<Trajectory>(
@@ -80,6 +82,28 @@ void SampleNode::on_timer()
     create_trajectory();
     pub_trajectory_->publish(best_trajectory_);
     pub_trajectory_candidate_->publish(trajectory_candidate_);
+    // RCLCPP_INFO(this->get_logger(), "Costmap size: %zu",costmap_.size());
+    /*
+    for (size_t i = 0; i < costmap_.size(); ++i) {
+        std::string row = "Row " + std::to_string(i) + ": ";
+        for (size_t j = 0; j < costmap_[i].size(); ++j) {
+            row += std::to_string(costmap_[i][j]) + " ";
+        }
+        RCLCPP_INFO(this->get_logger(), row.c_str());
+    }
+    */
+    auto costmap_msg = autoware_practice_msgs::msg::FloatGrid();
+    costmap_msg.width = GRID_WIDTH_;
+    costmap_msg.height = GRID_HEIGHT_;
+
+    // RCLCPP_INFO(this->get_logger(), "Costmap.data[9999]: %f", costmap_[99][99]);
+
+    // 2次元配列を1次元配列に変換
+    for (const auto & row : costmap_) {
+      costmap_msg.data.insert(costmap_msg.data.end(), row.begin(), row.end());
+    }
+
+    pub_costmap_->publish(costmap_msg);
   }
 }
 
@@ -91,10 +115,10 @@ void SampleNode::create_trajectory()  // called by on_timer()
   std::vector<Trajectory> trajectory_set = create_trajectory_set();
 
   // create costmap
-  std::vector<std::vector<float>> costmap = create_costmap();
+  costmap_ = create_costmap();
 
   // evaluate trahectories by the cost map
-  best_trajectory_ = evaluate_trajectory(trajectory_set, costmap);
+  best_trajectory_ = evaluate_trajectory(trajectory_set, costmap_);
   // RCLCPP_INFO(this->get_logger(), "Logging trajectory with %zu points", best_trajectory.points.size());
   /*
   for (size_t i = 0; i < best_trajectory.points.size(); ++i) {
@@ -341,25 +365,14 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
   for (const auto & point : pointcloud_pcl->points) {
     int x_index = static_cast<int>(point.x / GRID_RESOLUTION_);
     int y_index = static_cast<int>((point.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
-
+    const int KERNEL_SIZE = 1;            // 評価関数を設定する範囲（カーネルサイズ）
+    const float SURROUNDING_COST = 50.0;  // 周囲の格子の評価関数
     if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
-      costmap[x_index][y_index] = 100.0;  // 点が存在する格子は評価関数を高く設定
-    }
-  }
-  // 周囲の格子に評価関数を設定
-  const int KERNEL_SIZE = 1;            // 評価関数を設定する範囲（カーネルサイズ）
-  const float SURROUNDING_COST = 50.0;  // 周囲の格子の評価関数
-
-  for (int x = 0; x < GRID_WIDTH_; ++x) {
-    for (int y = 0; y < GRID_HEIGHT_; ++y) {
-      if (costmap[x][y] == 100.0) {
-        for (int dx = -KERNEL_SIZE; dx <= KERNEL_SIZE; ++dx) {
-          for (int dy = -KERNEL_SIZE; dy <= KERNEL_SIZE; ++dy) {
-            int nx = x + dx;
-            int ny = y + dy;
-            if (nx >= 0 && nx < GRID_WIDTH_ && ny >= 0 && ny < GRID_HEIGHT_) {
-              costmap[nx][ny] += SURROUNDING_COST;
-            }
+      costmap[x_index][y_index] += 100.0;  // 点が存在する格子は評価関数を高く設定
+      for (int x = x_index - KERNEL_SIZE; x <= x_index + KERNEL_SIZE; ++x) {
+        for (int y = y_index - KERNEL_SIZE; y <= y_index + KERNEL_SIZE; ++y) {
+          if (x >= 0 && x < GRID_WIDTH_ && y >= 0 && y < GRID_HEIGHT_) {
+            costmap[x][y] += SURROUNDING_COST;
           }
         }
       }
@@ -436,9 +449,10 @@ Eigen::Vector3d SampleNode::quaternionToVector(Eigen::Quaterniond q)
   Eigen::Vector3d unitVector(1, 0, 0);
   Eigen::Vector3d directionVector = q * unitVector;
   // 計算された方向ベクトルをログに記録
-  RCLCPP_WARN(
+  /*RCLCPP_WARN(
     this->get_logger(), "Direction Vector: [%f, %f, %f]", directionVector.x(), directionVector.y(),
     directionVector.z());
+  */
   return directionVector;
 }
 // エルミート補間関数

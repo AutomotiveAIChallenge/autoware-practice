@@ -20,6 +20,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <autoware_auto_planning_msgs/msg/trajectory.hpp>
 #include <autoware_auto_planning_msgs/msg/trajectory_point.hpp>
+#include <autoware_practice_msgs/msg/float_grid.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
@@ -69,6 +70,7 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<Trajectory>::SharedPtr pub_trajectory_;
   rclcpp::Publisher<Trajectory>::SharedPtr pub_trajectory_candidate_;
+  rclcpp::Publisher<autoware_practice_msgs::msg::FloatGrid>::SharedPtr pub_costmap_;
   rclcpp::Subscription<Odometry>::SharedPtr sub_kinematic_state_;
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_pointcloud_;
@@ -84,6 +86,7 @@ private:
   Trajectory best_trajectory_;
   Trajectory trajectory_candidate_;
   int state_num_;
+  std::vector<std::vector<float>> costmap_;
 
   bool current_state_initialized_ = false;
   bool reference_trajectory_initialized_ = false;

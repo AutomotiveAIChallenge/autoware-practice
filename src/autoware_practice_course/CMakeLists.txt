@@ -11,10 +11,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake_auto REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 ament_auto_find_build_dependencies()
 
 find_package(PCL REQUIRED COMPONENTS common io)
-find_package(visualization_msgs REQUIRED)  # 追加
+find_package(visualization_msgs REQUIRED)
 
 include_directories(
   include
@@ -31,7 +32,8 @@ ament_auto_add_executable(trajectory_planner src/avoidance/trajectory_planner.cp
 ament_auto_add_executable(trajectory_visualizer src/avoidance/marker.cpp)
 
 target_link_libraries(trajectory_planner ${PCL_LIBRARIES})
-target_link_libraries(trajectory_visualizer ${visualization_msgs_LIBRARIES})  # 追加
+target_link_libraries(trajectory_visualizer ${visualization_msgs_LIBRARIES})
+target_link_libraries(trajectory_planner ${cpp_typesupport_target})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
