@@ -37,6 +37,24 @@ SampleNode::SampleNode()
 {
   using std::placeholders::_1;
 
+  declare_parameter<double>("grid_resolution", GRID_RESOLUTION_);
+  declare_parameter<double>("grid_width", GRID_WIDTH_);
+  declare_parameter<double>("grid_height", GRID_HEIGHT_);
+  declare_parameter<int>("state_num", STATE_NUM_);
+  declare_parameter<double>("target_interval", TARGET_INTERVAL_);
+  declare_parameter<int>("target_index", TARGET_INDEX_);
+  declare_parameter<int>("num_points", NUM_POINTS_);
+  declare_parameter<double>("control_point_distance", CONTROL_POINT_DISTANCE_);
+
+  get_parameter("grid_resolution", GRID_RESOLUTION_);
+  get_parameter("grid_width", GRID_WIDTH_);
+  get_parameter("grid_height", GRID_HEIGHT_);
+  get_parameter("state_num", STATE_NUM_);
+  get_parameter("target_interval", TARGET_INTERVAL_);
+  get_parameter("target_index", TARGET_INDEX_);
+  get_parameter("num_points", NUM_POINTS_);
+  get_parameter("control_point_distance", CONTROL_POINT_DISTANCE_);
+
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   pub_trajectory_candidate_ =
     create_publisher<Trajectory>("/planning/scenario_planning/trajectory_candidate", rclcpp::QoS(1));
