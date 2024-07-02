@@ -139,8 +139,8 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
   Trajectory trajectory_candidate;
   for (const auto & target_trajectory_point : target_trajectory_point_set) {
     // 車両の位置姿勢と目標状態をエルミート補間
-    std::vector<Point> interpolated_points = hermiteInterpolate(
-      current_position_, target_trajectory_point.pose.position, current_vector, target_vector, NUM_POINTS_);
+    std::vector<Point> interpolated_points =
+      hermiteInterpolate(current_position_, target_trajectory_point.pose.position, current_vector, target_vector);
 
     Trajectory trajectorys;
 
@@ -351,8 +351,7 @@ Eigen::Vector3d SampleNode::quaternionToVector(Eigen::Quaterniond q)
 }
 // エルミート補間関数
 std::vector<geometry_msgs::msg::Point> SampleNode::hermiteInterpolate(
-  const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1,
-  int numPoints)
+  const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1)
 {
   std::vector<geometry_msgs::msg::Point> interpolatedPoints;
 
@@ -365,8 +364,8 @@ std::vector<geometry_msgs::msg::Point> SampleNode::hermiteInterpolate(
   Eigen::Vector3d c2 = v1 - m1 * CONTROL_POINT_DISTANCE_;
   Eigen::Vector3d c3 = v1;
 
-  for (int i = 0; i <= numPoints; ++i) {
-    double t = static_cast<double>(i) / numPoints;
+  for (int i = 0; i <= NUM_POINTS_; ++i) {
+    double t = static_cast<double>(i) / NUM_POINTS_;
     double t2 = t * t;
     double t3 = t2 * t;
     double one_minus_t = 1.0 - t;

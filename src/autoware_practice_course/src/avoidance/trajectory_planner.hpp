@@ -74,14 +74,14 @@ private:
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_pointcloud_;
 
-  const double GRID_RESOLUTION_;
-  const double GRID_WIDTH_;
-  const double GRID_HEIGHT_;
-  const int STATE_NUM_;
-  const double TARGET_INTERVAL_;
-  const int TARGET_INDEX_;
-  const int NUM_POINTS_;
-  const double CONTROL_POINT_DISTANCE_;
+  double GRID_RESOLUTION_;
+  double GRID_WIDTH_;
+  double GRID_HEIGHT_;
+  int STATE_NUM_;
+  double TARGET_INTERVAL_;
+  int TARGET_INDEX_;
+  int NUM_POINTS_;
+  double CONTROL_POINT_DISTANCE_;
 
   PointCloud2 pointcloud_;
   Point current_position_;
