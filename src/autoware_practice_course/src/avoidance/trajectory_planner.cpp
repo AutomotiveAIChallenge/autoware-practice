@@ -27,10 +27,14 @@ namespace autoware_practice_course
 SampleNode::SampleNode() : Node("trajectory_planner")
 {
   using std::placeholders::_1;
-  GRID_RESOLUTION_ = 1;  // 1セルのサイズ（メートル）
-  GRID_WIDTH_ = 100.0;
-  GRID_HEIGHT_ = 100.0;
-  state_num_ = 10;
+  GRID_RESOLUTION_ = 1;           // 1セルのサイズ（メートル）
+  TARGET_INTERVAL_ = 1.0;         // 目標状態の間隔（メートル）
+  TARGET_INDEX_ = 10;             // 目標状態までのインデックス
+  NUM_POINTS_ = 20;               // ベジエ曲線による補間を分割する点の数
+  CONTROL_POINT_DISTANCE_ = 3.0;  // ベジエ曲線の端点から制御点までの距離（メートル）
+  GRID_WIDTH_ = 100.0;            // コストマップの幅（メートル）
+  GRID_HEIGHT_ = 100.0;           // コストマップの高さ（メートル）
+  STATE_NUM_ = 9;                 // 目標状態の数
 
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   pub_trajectory_candidate_ =
@@ -134,11 +138,9 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
   // 車両の位置姿勢と目標状態集合をエルミート補間し、軌道を生成
   Trajectory trajectory_candidate;
   for (const auto & target_trajectory_point : target_trajectory_point_set) {
-    double num_points = 20;
-
     // 車両の位置姿勢と目標状態をエルミート補間
     std::vector<Point> interpolated_points = hermiteInterpolate(
-      current_position_, target_trajectory_point.pose.position, current_vector, target_vector, num_points);
+      current_position_, target_trajectory_point.pose.position, current_vector, target_vector, NUM_POINTS_);
 
     Trajectory trajectorys;
 
@@ -181,7 +183,7 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::creat
       }
     }
 
-    int target_trajectory_point_index = closest_waypoint_index + 10;
+    int target_trajectory_point_index = closest_waypoint_index + TARGET_INDEX_;
 
     // 10個先のtrajectory pointを取得
     autoware_auto_planning_msgs::msg::TrajectoryPoint target_trajectory_point =
@@ -195,7 +197,7 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::creat
     target_trajectory_point.pose.orientation.z = q.z();
     target_trajectory_point.pose.orientation.w = q.w();
     // 目標状態集合を生成
-    // target_trajectory_pointの姿勢に直交する方向に並ぶstate_num個の状態を生成
+    // target_trajectory_pointの姿勢に直交する方向に並ぶSTATE_NUM_個の状態を生成
     // クォータニオンを回転行列に変換
     Eigen::Matrix3d R = q.toRotationMatrix();
 
@@ -203,13 +205,13 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::creat
     Eigen::Vector3d v = R.col(1);
 
     // 点の配置
-    double d = 1.0;  // 点と点の間の距離
+
     std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> target_state_set;
-    for (int n = -4; n <= 4; ++n) {
+    for (int n = -STATE_NUM_ / 2; n <= (STATE_NUM_ - STATE_NUM_ / 2 - 1); ++n) {
       autoware_auto_planning_msgs::msg::TrajectoryPoint target_state = target_trajectory_point;
-      target_state.pose.position.x += n * d * v.x();
-      target_state.pose.position.y += n * d * v.y();
-      target_state.pose.position.z += n * d * v.z();
+      target_state.pose.position.x += n * TARGET_INTERVAL_ * v.x();
+      target_state.pose.position.y += n * TARGET_INTERVAL_ * v.y();
+      target_state.pose.position.z += n * TARGET_INTERVAL_ * v.z();
       target_state_set.push_back(target_state);
     }
 
@@ -359,8 +361,8 @@ std::vector<geometry_msgs::msg::Point> SampleNode::hermiteInterpolate(
 
   // Control points
   Eigen::Vector3d c0 = v0;
-  Eigen::Vector3d c1 = v0 + m0 * 3;
-  Eigen::Vector3d c2 = v1 - m1 * 3;
+  Eigen::Vector3d c1 = v0 + m0 * CONTROL_POINT_DISTANCE_;
+  Eigen::Vector3d c2 = v1 - m1 * CONTROL_POINT_DISTANCE_;
   Eigen::Vector3d c3 = v1;
 
   for (int i = 0; i <= numPoints; ++i) {

@@ -59,8 +59,7 @@ private:
   Trajectory evaluate_trajectory(
     const std::vector<Trajectory> & trajectory_set, const std::vector<std::vector<float>> & costmap);
   std::vector<TrajectoryPoint> create_target_state_set();
-  std::vector<Point> hermiteInterpolate(
-    const Point & p0, const Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1, int numPoints);
+  std::vector<Point> hermiteInterpolate(const Point & p0, const Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1);
   double quaternionToInclination(Eigen::Quaterniond q);
   Eigen::Vector3d quaternionToVector(Eigen::Quaterniond q);
   Eigen::Vector3d pointToVector3d(const geometry_msgs::msg::Point & point);
@@ -75,9 +74,15 @@ private:
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_pointcloud_;
 
-  double GRID_RESOLUTION_;
-  double GRID_WIDTH_;
-  double GRID_HEIGHT_;
+  const double GRID_RESOLUTION_;
+  const double GRID_WIDTH_;
+  const double GRID_HEIGHT_;
+  const int STATE_NUM_;
+  const double TARGET_INTERVAL_;
+  const int TARGET_INDEX_;
+  const int NUM_POINTS_;
+  const double CONTROL_POINT_DISTANCE_;
+
   PointCloud2 pointcloud_;
   Point current_position_;
   Quaternion current_orientation_;
@@ -85,7 +90,6 @@ private:
   Trajectory reference_trajectory_;
   Trajectory best_trajectory_;
   Trajectory trajectory_candidate_;
-  int state_num_;
   std::vector<std::vector<float>> costmap_;
 
   bool current_state_initialized_ = false;
