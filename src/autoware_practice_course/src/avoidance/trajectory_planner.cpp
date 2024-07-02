@@ -24,17 +24,18 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode() : Node("trajectory_planner")
+SampleNode::SampleNode()
+: Node("trajectory_planner"),
+  GRID_RESOLUTION_(1),
+  GRID_WIDTH_(100.0),
+  GRID_HEIGHT_(100.0),
+  STATE_NUM_(9),
+  TARGET_INTERVAL_(1.0),
+  TARGET_INDEX_(10),
+  NUM_POINTS_(20),
+  CONTROL_POINT_DISTANCE_(3.0)
 {
   using std::placeholders::_1;
-  GRID_RESOLUTION_ = 1;           // 1セルのサイズ（メートル）
-  TARGET_INTERVAL_ = 1.0;         // 目標状態の間隔（メートル）
-  TARGET_INDEX_ = 10;             // 目標状態までのインデックス
-  NUM_POINTS_ = 20;               // ベジエ曲線による補間を分割する点の数
-  CONTROL_POINT_DISTANCE_ = 3.0;  // ベジエ曲線の端点から制御点までの距離（メートル）
-  GRID_WIDTH_ = 100.0;            // コストマップの幅（メートル）
-  GRID_HEIGHT_ = 100.0;           // コストマップの高さ（メートル）
-  STATE_NUM_ = 9;                 // 目標状態の数
 
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   pub_trajectory_candidate_ =
