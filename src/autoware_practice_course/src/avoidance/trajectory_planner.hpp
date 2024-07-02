@@ -59,7 +59,7 @@ private:
   Trajectory evaluate_trajectory(
     const std::vector<Trajectory> & trajectory_set, const std::vector<std::vector<float>> & costmap);
   std::vector<TrajectoryPoint> create_target_state_set();
-  std::vector<Point> hermiteInterpolate(const Point & p0, const Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1);
+  std::vector<Point> bezierInterpolate(const Point & p0, const Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1);
   double quaternionToInclination(Eigen::Quaterniond q);
   Eigen::Vector3d quaternionToVector(Eigen::Quaterniond q);
   Eigen::Vector3d pointToVector3d(const geometry_msgs::msg::Point & point);

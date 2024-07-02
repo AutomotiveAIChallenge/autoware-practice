@@ -159,7 +159,7 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
   for (const auto & target_trajectory_point : target_trajectory_point_set) {
     // 車両の位置姿勢と目標状態をエルミート補間
     std::vector<Point> interpolated_points =
-      hermiteInterpolate(current_position_, target_trajectory_point.pose.position, current_vector, target_vector);
+      bezierInterpolate(current_position_, target_trajectory_point.pose.position, current_vector, target_vector);
 
     Trajectory trajectorys;
 
@@ -369,7 +369,7 @@ Eigen::Vector3d SampleNode::quaternionToVector(Eigen::Quaterniond q)
   return directionVector;
 }
 // エルミート補間関数
-std::vector<geometry_msgs::msg::Point> SampleNode::hermiteInterpolate(
+std::vector<geometry_msgs::msg::Point> SampleNode::bezierInterpolate(
   const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1)
 {
   std::vector<geometry_msgs::msg::Point> interpolatedPoints;
