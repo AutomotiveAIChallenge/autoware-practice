@@ -149,15 +149,13 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
   target_q.y() = target_trajectory_point_set[1].pose.orientation.y;
   target_q.z() = target_trajectory_point_set[1].pose.orientation.z;
   target_q.w() = target_trajectory_point_set[1].pose.orientation.w;
-  // double current_inclination = quaternionToInclination(current_q);
-  // double target_inclination = quaternionToInclination(target_q);
   Eigen::Vector3d current_vector = quaternionToVector(current_q);
   Eigen::Vector3d target_vector = quaternionToVector(target_q);
 
   // 車両の位置姿勢と目標状態集合をエルミート補間し、軌道を生成
   Trajectory trajectory_candidate;
   for (const auto & target_trajectory_point : target_trajectory_point_set) {
-    // 車両の位置姿勢と目標状態をエルミート補間
+    // 車両の位置姿勢と目標状態をベジエ曲線で補間
     std::vector<Point> interpolated_points =
       bezierInterpolate(current_position_, target_trajectory_point.pose.position, current_vector, target_vector);
 
@@ -184,7 +182,7 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::creat
 {
   if (reference_trajectory_.points.empty()) {
     RCLCPP_ERROR(this->get_logger(), "Reference trajectory is empty.");
-    return {};  // 空のvectorを返す
+    return {};
   } else {
     // 車両に最も近いtrajectory pointを取得
     double min_distance = std::numeric_limits<double>::max();
@@ -204,7 +202,7 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::creat
 
     int target_trajectory_point_index = closest_waypoint_index + TARGET_INDEX_;
 
-    // 10個先のtrajectory pointを取得
+    // TARGET_INDEX_個先のtrajectory pointを取得
     autoware_auto_planning_msgs::msg::TrajectoryPoint target_trajectory_point =
       reference_trajectory_.points[target_trajectory_point_index];
 
@@ -215,15 +213,13 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::creat
     target_trajectory_point.pose.orientation.y = q.y();
     target_trajectory_point.pose.orientation.z = q.z();
     target_trajectory_point.pose.orientation.w = q.w();
-    // 目標状態集合を生成
+
     // target_trajectory_pointの姿勢に直交する方向に並ぶSTATE_NUM_個の状態を生成
     // クォータニオンを回転行列に変換
     Eigen::Matrix3d R = q.toRotationMatrix();
 
     // 直交するベクトルの選択（第二列ベクトル）
     Eigen::Vector3d v = R.col(1);
-
-    // 点の配置
 
     std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> target_state_set;
     for (int n = -STATE_NUM_ / 2; n <= (STATE_NUM_ - STATE_NUM_ / 2 - 1); ++n) {
@@ -264,20 +260,11 @@ geometry_msgs::msg::Point SampleNode::vector3dToPoint(const Eigen::Vector3d & ve
 
 Eigen::Quaterniond SampleNode::vectorToQuaternion(const Eigen::Vector3d & start, const Eigen::Vector3d & end)
 {
-  // 方向ベクトルの計算
   Eigen::Vector3d direction = (end - start).normalized();
-
-  // 基準ベクトル（例：x軸）
   Eigen::Vector3d referenceVector(1.0, 0.0, 0.0);
-
-  // 回転軸の計算
   Eigen::Vector3d axis = referenceVector.cross(direction);
   axis.normalize();
-
-  // 回転角度の計算
   double angle = acos(referenceVector.dot(direction));
-
-  // 回転をクォータニオンに変換
   Eigen::Quaterniond q(Eigen::AngleAxisd(angle, axis));
   return q;
 }
@@ -288,7 +275,6 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
   // 変換関数を呼び出し
   pcl::fromROSMsg(pointcloud_, *pointcloud_pcl);
   // pointcloud_を元にcostmapを生成
-  // グリッドマップの初期化
 
   std::vector<std::vector<float>> costmap(GRID_WIDTH_, std::vector<float>(GRID_HEIGHT_, 0.0));
 
@@ -297,7 +283,7 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
     int x_index = static_cast<int>(point.x / GRID_RESOLUTION_);
     int y_index = static_cast<int>((point.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
     const int KERNEL_SIZE = 1;            // 評価関数を設定する範囲（カーネルサイズ）
-    const float SURROUNDING_COST = 50.0;  // 周囲の格子の評価関数
+    const float SURROUNDING_COST = 50.0;  // 周囲の格子の評価値
     if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
       costmap[x_index][y_index] += 100.0;  // 点が存在する格子は評価関数を高く設定
       for (int x = x_index - KERNEL_SIZE; x <= x_index + KERNEL_SIZE; ++x) {
@@ -310,7 +296,7 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
     }
   }
 
-  const float REFERENCE_TRAJECTORY_COST = -1;  // reference_trajectoryの格子の評価関数
+  const float REFERENCE_TRAJECTORY_COST = -1;  // reference_trajectoryの格子の評価値
   for (const auto & point : reference_trajectory_.points) {
     int x_index = static_cast<int>(point.pose.position.x / GRID_RESOLUTION_);
     int y_index = static_cast<int>((point.pose.position.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
@@ -368,7 +354,7 @@ Eigen::Vector3d SampleNode::quaternionToVector(Eigen::Quaterniond q)
   Eigen::Vector3d directionVector = q * unitVector;
   return directionVector;
 }
-// エルミート補間関数
+// ベジエ曲線で補間する関数
 std::vector<geometry_msgs::msg::Point> SampleNode::bezierInterpolate(
   const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1)
 {
