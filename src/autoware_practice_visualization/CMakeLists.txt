@@ -15,7 +15,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 target_link_libraries(${PROJECT_NAME}
   ${QT_LIBRARIES}
 )
-
+ament_auto_add_executable(marker src/marker.cpp)
 pluginlib_export_plugin_description_file(rviz_common plugins/plugin_description.xml)
 
 ament_auto_package()

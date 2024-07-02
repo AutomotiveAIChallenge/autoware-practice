@@ -29,10 +29,9 @@ ament_auto_add_executable(longitudinal_controller src/velocity_planning/longitud
 ament_auto_add_executable(trajectory_loader src/velocity_planning/trajectory_loader.cpp)
 ament_auto_add_executable(trajectory_follower src/velocity_planning/trajectory_follower.cpp)
 ament_auto_add_executable(trajectory_planner src/avoidance/trajectory_planner.cpp)
-ament_auto_add_executable(trajectory_visualizer src/avoidance/marker.cpp)
+
 
 target_link_libraries(trajectory_planner ${PCL_LIBRARIES})
-target_link_libraries(trajectory_visualizer ${visualization_msgs_LIBRARIES})
 target_link_libraries(trajectory_planner ${cpp_typesupport_target})
 
 if(BUILD_TESTING)

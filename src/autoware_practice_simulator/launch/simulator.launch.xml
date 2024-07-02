@@ -5,4 +5,5 @@
     <param from="$(var param_file)"/>
     <param from="$(var specs_file)"/>
   </node>
+  <node pkg="autoware_practice_visualization" exec="marker" name="marker"/>
 </launch>
