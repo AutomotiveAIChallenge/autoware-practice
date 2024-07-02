@@ -74,7 +74,7 @@ private:
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_pointcloud_;
 
-  double GRID_RESOLUTION_;         // 1セルのサイズ（メートル）
+  double GRID_RESOLUTION_;
   double GRID_WIDTH_;              // 目標状態の間隔（メートル）
   double GRID_HEIGHT_;             // 目標状態までのインデックス
   int STATE_NUM_;                  // ベジエ曲線による補間を分割する点の数
