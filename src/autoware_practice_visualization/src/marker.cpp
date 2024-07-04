@@ -15,6 +15,8 @@
 #include "marker.hpp"
 
 #include <memory>
+namespace autoware_practice_visualization
+{
 
 TrajectoryVisualizer::TrajectoryVisualizer(const rclcpp::NodeOptions & options) : Node("marker", options)
 {
@@ -175,6 +177,8 @@ void TrajectoryVisualizer::costmapCallback(const autoware_practice_msgs::msg::Fl
 
   candidate_marker_pub_->publish(marker_array);
 }
+
+}  // namespace autoware_practice_visualization
 
 int main(int argc, char ** argv)
 {

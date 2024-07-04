@@ -20,6 +20,8 @@
 #include <autoware_practice_msgs/msg/float_grid.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
+namespace autoware_practice_visualization
+{
 class TrajectoryVisualizer : public rclcpp::Node
 {
 public:
@@ -40,5 +42,7 @@ private:
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr candidate_marker_pub_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr costmap_marker_pub_;
 };
+
+}  // namespace autoware_practice_visualization
 
 #endif  // MARKER_HPP_
