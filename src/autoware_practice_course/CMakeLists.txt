@@ -11,15 +11,28 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake_auto REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 ament_auto_find_build_dependencies()
+
+find_package(PCL REQUIRED COMPONENTS common io)
+find_package(visualization_msgs REQUIRED)
+
+include_directories(
+  include
+  ${PCL_INCLUDE_DIRS}
+)
 
 ament_auto_add_executable(vehicle_forward  src/vehicle/forward.cpp)
 ament_auto_add_executable(vehicle_backward src/vehicle/backward.cpp)
 ament_auto_add_executable(p_controller src/velocity_planning/p_controller.cpp)
-ament_auto_add_executable(trajectory_planner src/velocity_planning/trajectory_planner.cpp)
 ament_auto_add_executable(longitudinal_controller src/velocity_planning/longitudinal_controller.cpp)
 ament_auto_add_executable(trajectory_loader src/velocity_planning/trajectory_loader.cpp)
 ament_auto_add_executable(trajectory_follower src/velocity_planning/trajectory_follower.cpp)
+ament_auto_add_executable(trajectory_planner src/avoidance/trajectory_planner.cpp)
+
+
+target_link_libraries(trajectory_planner ${PCL_LIBRARIES})
+target_link_libraries(trajectory_planner ${cpp_typesupport_target})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

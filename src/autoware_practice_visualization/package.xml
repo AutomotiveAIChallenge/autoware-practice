@@ -9,12 +9,14 @@
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
 
+  <depend>autoware_auto_planning_msgs</depend>
   <depend>autoware_practice_msgs</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>
   <depend>libqt5-widgets</depend>
   <depend>rclcpp</depend>
   <depend>rviz_common</depend>
+  <depend>visualization_msgs</depend>
 
   <test_depend>ament_cmake_copyright</test_depend>
   <test_depend>ament_cmake_cppcheck</test_depend>
