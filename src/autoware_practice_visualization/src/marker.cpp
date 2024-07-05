@@ -184,7 +184,7 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   auto options = rclcpp::NodeOptions();
-  auto node = std::make_shared<TrajectoryVisualizer>(options);
+  auto node = std::make_shared<autoware_practice_visualization::TrajectoryVisualizer>(options);
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
