@@ -19,7 +19,7 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode() : Node("p_controller")
+PControllerNode::PControllerNode() : Node("p_controller")
 {
   declare_parameter<double>("kp", 0.0);
   declare_parameter<double>("target_velocity", 1.0);
@@ -37,7 +37,7 @@ SampleNode::SampleNode() : Node("p_controller")
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
 }
 
-void SampleNode::on_timer()
+void PControllerNode::on_timer()
 {
   const auto stamp = now();
 
@@ -58,7 +58,7 @@ void SampleNode::on_timer()
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<autoware_practice_course::SampleNode>();
+  auto node = std::make_shared<autoware_practice_course::PControllerNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

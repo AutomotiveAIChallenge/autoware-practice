@@ -20,7 +20,7 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode() : Node("longitudinal_controller"), kp_(0.0)
+LongitudinalControllerNode::LongitudinalControllerNode() : Node("longitudinal_controller"), kp_(0.0)
 {
   using std::placeholders::_1;
   declare_parameter<double>("kp", kp_);
@@ -28,15 +28,17 @@ SampleNode::SampleNode() : Node("longitudinal_controller"), kp_(0.0)
 
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   sub_trajectory_ = create_subscription<Trajectory>(
-    "/planning/scenario_planning/trajectory", rclcpp::QoS(1), std::bind(&SampleNode::update_target_velocity, this, _1));
+    "/planning/scenario_planning/trajectory", rclcpp::QoS(1),
+    std::bind(&LongitudinalControllerNode::update_target_velocity, this, _1));
   sub_kinematic_state_ = create_subscription<Odometry>(
-    "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
+    "/localization/kinematic_state", rclcpp::QoS(1),
+    std::bind(&LongitudinalControllerNode::update_current_state, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
 }
 
-void SampleNode::update_target_velocity(const Trajectory & msg)
+void LongitudinalControllerNode::update_target_velocity(const Trajectory & msg)
 {
   double min_distance = std::numeric_limits<double>::max();
   size_t closest_waypoint_index = 0;
@@ -56,13 +58,13 @@ void SampleNode::update_target_velocity(const Trajectory & msg)
   target_velocity_ = msg.points[closest_waypoint_index].longitudinal_velocity_mps;
 };
 
-void SampleNode::update_current_state(const Odometry & msg)
+void LongitudinalControllerNode::update_current_state(const Odometry & msg)
 {
   current_velocity_ = msg.twist.twist.linear.x;
   current_pose_ = msg.pose.pose.position;  // 現在の車両の位置を更新する
 };
 
-void SampleNode::on_timer()
+void LongitudinalControllerNode::on_timer()
 {
   const auto stamp = now();
 
@@ -84,7 +86,7 @@ void SampleNode::on_timer()
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<autoware_practice_course::SampleNode>();
+  auto node = std::make_shared<autoware_practice_course::LongitudinalControllerNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

@@ -24,7 +24,7 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode()
+TrajectoryPlannerNode::TrajectoryPlannerNode()
 : Node("trajectory_planner"),
   GRID_RESOLUTION_(1),          // 1セルのサイズ（メートル）
   GRID_WIDTH_(100.0),           // コストマップの幅（メートル）
@@ -61,19 +61,19 @@ SampleNode::SampleNode()
   pub_costmap_ =
     create_publisher<autoware_practice_msgs::msg::FloatGrid>("/planning/scenario_planning/costmap", rclcpp::QoS(1));
   sub_kinematic_state_ = create_subscription<Odometry>(
-    "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
+    "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&TrajectoryPlannerNode::update_current_state, this, _1));
   sub_trajectory_ = create_subscription<Trajectory>(
     "/planning/trajectory_loader/trajectory", rclcpp::QoS(1),
-    std::bind(&SampleNode::update_reference_trajectory, this, _1));
+    std::bind(&TrajectoryPlannerNode::update_reference_trajectory, this, _1));
   sub_pointcloud_ = create_subscription<PointCloud2>(
     "/perception/obstacle_segmentation/pointcloud", rclcpp::QoS(1),
-    std::bind(&SampleNode::update_pointcloud, this, _1));
+    std::bind(&TrajectoryPlannerNode::update_pointcloud, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
 }
 
-void SampleNode::update_current_state(const Odometry & msg)  // called by sub_kinematic_state_
+void TrajectoryPlannerNode::update_current_state(const Odometry & msg)  // called by sub_kinematic_state_
 {
   current_velocity_ = msg.twist.twist.linear.x;
   current_position_ = msg.pose.pose.position;
@@ -81,19 +81,20 @@ void SampleNode::update_current_state(const Odometry & msg)  // called by sub_ki
   current_state_initialized_ = true;
 };
 
-void SampleNode::update_reference_trajectory(const Trajectory & msg)  // called by sub_trajectory_
+void TrajectoryPlannerNode::update_reference_trajectory(const Trajectory & msg)  // called by sub_trajectory_
+
 {
   reference_trajectory_ = msg;
   reference_trajectory_initialized_ = true;
 };
 
-void SampleNode::update_pointcloud(const PointCloud2 & msg)  // called by sub_pointcloud_
+void TrajectoryPlannerNode::update_pointcloud(const PointCloud2 & msg)  // called by sub_pointcloud_
 {
   pointcloud_ = msg;
   pointcloud_initialized_ = true;
 };
 
-void SampleNode::on_timer()
+void TrajectoryPlannerNode::on_timer()
 {
   if (!current_state_initialized_ || !reference_trajectory_initialized_ || !pointcloud_initialized_) {
     RCLCPP_WARN(this->get_logger(), "Waiting for all initial data to be received.");
@@ -114,7 +115,7 @@ void SampleNode::on_timer()
   }
 }
 
-void SampleNode::create_trajectory()  // called by on_timer()
+void TrajectoryPlannerNode::create_trajectory()  // called by on_timer()
 {
   //  state lattice planner
   //  create trajectory library
@@ -127,7 +128,7 @@ void SampleNode::create_trajectory()  // called by on_timer()
   best_trajectory_ = evaluate_trajectory(trajectory_set, costmap_);
 }
 
-std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
+std::vector<TrajectoryPlannerNode::Trajectory> TrajectoryPlannerNode::create_trajectory_set()
 {
   // 目標状態集合を計算
   std::vector<TrajectoryPoint> target_trajectory_point_set = create_target_state_set();
@@ -178,7 +179,7 @@ std::vector<SampleNode::Trajectory> SampleNode::create_trajectory_set()
   return trajectory_set;
 }
 
-std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> SampleNode::create_target_state_set()
+std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlannerNode::create_target_state_set()
 {
   if (reference_trajectory_.points.empty()) {
     RCLCPP_ERROR(this->get_logger(), "Reference trajectory is empty.");
@@ -244,12 +245,12 @@ geometry_msgs::msg::Point operator+(const geometry_msgs::msg::Point & p1, const 
   return result;
 }
 
-Eigen::Vector3d SampleNode::pointToVector3d(const geometry_msgs::msg::Point & point)
+Eigen::Vector3d TrajectoryPlannerNode::pointToVector3d(const geometry_msgs::msg::Point & point)
 {
   return Eigen::Vector3d(point.x, point.y, point.z);
 }
 
-geometry_msgs::msg::Point SampleNode::vector3dToPoint(const Eigen::Vector3d & vector)
+geometry_msgs::msg::Point TrajectoryPlannerNode::vector3dToPoint(const Eigen::Vector3d & vector)
 {
   geometry_msgs::msg::Point point;
   point.x = vector.x();
@@ -258,7 +259,7 @@ geometry_msgs::msg::Point SampleNode::vector3dToPoint(const Eigen::Vector3d & ve
   return point;
 }
 
-Eigen::Quaterniond SampleNode::vectorToQuaternion(const Eigen::Vector3d & start, const Eigen::Vector3d & end)
+Eigen::Quaterniond TrajectoryPlannerNode::vectorToQuaternion(const Eigen::Vector3d & start, const Eigen::Vector3d & end)
 {
   Eigen::Vector3d direction = (end - start).normalized();
   Eigen::Vector3d referenceVector(1.0, 0.0, 0.0);
@@ -269,7 +270,7 @@ Eigen::Quaterniond SampleNode::vectorToQuaternion(const Eigen::Vector3d & start,
   return q;
 }
 
-std::vector<std::vector<float>> SampleNode::create_costmap()
+std::vector<std::vector<float>> TrajectoryPlannerNode::create_costmap()
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_pcl(new pcl::PointCloud<pcl::PointXYZ>());
   // 変換関数を呼び出し
@@ -309,8 +310,9 @@ std::vector<std::vector<float>> SampleNode::create_costmap()
   return costmap;
 }
 
-SampleNode::Trajectory SampleNode::evaluate_trajectory(
-  const std::vector<SampleNode::Trajectory> & trajectory_set, const std::vector<std::vector<float>> & costmap)
+TrajectoryPlannerNode::Trajectory TrajectoryPlannerNode::evaluate_trajectory(
+  const std::vector<TrajectoryPlannerNode::Trajectory> & trajectory_set,
+  const std::vector<std::vector<float>> & costmap)
 {
   Trajectory best_trajectory;
   std::vector<float> trajectory_cost(trajectory_set.size(), 0.0f);
@@ -342,20 +344,20 @@ SampleNode::Trajectory SampleNode::evaluate_trajectory(
   return best_trajectory;
 }
 
-double SampleNode::quaternionToInclination(Eigen::Quaterniond q)
+double TrajectoryPlannerNode::quaternionToInclination(Eigen::Quaterniond q)
 {
   double inclination = 2.0 * q.z() / q.w();
   return inclination;
 }
 
-Eigen::Vector3d SampleNode::quaternionToVector(Eigen::Quaterniond q)
+Eigen::Vector3d TrajectoryPlannerNode::quaternionToVector(Eigen::Quaterniond q)
 {
   Eigen::Vector3d unitVector(1, 0, 0);
   Eigen::Vector3d directionVector = q * unitVector;
   return directionVector;
 }
 // ベジエ曲線で補間する関数
-std::vector<geometry_msgs::msg::Point> SampleNode::bezierInterpolate(
+std::vector<geometry_msgs::msg::Point> TrajectoryPlannerNode::bezierInterpolate(
   const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1)
 {
   std::vector<geometry_msgs::msg::Point> interpolatedPoints;
@@ -390,7 +392,7 @@ std::vector<geometry_msgs::msg::Point> SampleNode::bezierInterpolate(
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<autoware_practice_course::SampleNode>();
+  auto node = std::make_shared<autoware_practice_course::TrajectoryPlannerNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

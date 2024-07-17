@@ -22,10 +22,10 @@
 namespace autoware_practice_course
 {
 
-class SampleNode : public rclcpp::Node
+class PControllerNode : public rclcpp::Node
 {
 public:
-  SampleNode();
+  PControllerNode();
 
 private:
   using AckermannControlCommand = autoware_auto_control_msgs::msg::AckermannControlCommand;
