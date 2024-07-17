@@ -23,7 +23,7 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode() : Node("trajectory_loader")
+TrajectoryLoaderNode::TrajectoryLoaderNode() : Node("trajectory_loader")
 {
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   this->declare_parameter<std::string>("path_file", "path.csv");
@@ -34,12 +34,12 @@ SampleNode::SampleNode() : Node("trajectory_loader")
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
 }
 
-void SampleNode::on_timer()
+void TrajectoryLoaderNode::on_timer()
 {
   pub_trajectory_->publish(trajectory_);
 }
 
-void SampleNode::load_path(const std::string & file_path)
+void TrajectoryLoaderNode::load_path(const std::string & file_path)
 {
   std::ifstream file(file_path);
   if (!file.is_open()) {
@@ -71,7 +71,7 @@ void SampleNode::load_path(const std::string & file_path)
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<autoware_practice_course::SampleNode>();
+  auto node = std::make_shared<autoware_practice_course::TrajectoryLoaderNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

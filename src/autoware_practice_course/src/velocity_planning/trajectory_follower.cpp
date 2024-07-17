@@ -20,7 +20,7 @@
 namespace autoware_practice_course
 {
 
-SampleNode::SampleNode() : Node("trajectory_follower"), kp_(0.0), lookahead_distance_(5.0)
+TrajectoryFollowerNode::TrajectoryFollowerNode() : Node("trajectory_follower"), kp_(0.0), lookahead_distance_(5.0)
 {
   using std::placeholders::_1;
   declare_parameter<double>("kp", kp_);
@@ -34,15 +34,17 @@ SampleNode::SampleNode() : Node("trajectory_follower"), kp_(0.0), lookahead_dist
 
   pub_command_ = create_publisher<AckermannControlCommand>("/control/command/control_cmd", rclcpp::QoS(1));
   sub_trajectory_ = create_subscription<Trajectory>(
-    "/planning/scenario_planning/trajectory", rclcpp::QoS(1), std::bind(&SampleNode::update_target_velocity, this, _1));
+    "/planning/scenario_planning/trajectory", rclcpp::QoS(1),
+    std::bind(&TrajectoryFollowerNode::update_target_velocity, this, _1));
   sub_kinematic_state_ = create_subscription<Odometry>(
-    "/localization/kinematic_state", rclcpp::QoS(1), std::bind(&SampleNode::update_current_state, this, _1));
+    "/localization/kinematic_state", rclcpp::QoS(1),
+    std::bind(&TrajectoryFollowerNode::update_current_state, this, _1));
 
   const auto period = rclcpp::Rate(10).period();
   timer_ = rclcpp::create_timer(this, get_clock(), period, [this] { on_timer(); });
 }
 
-void SampleNode::update_target_velocity(const Trajectory & msg)
+void TrajectoryFollowerNode::update_target_velocity(const Trajectory & msg)
 {
   double min_distance = std::numeric_limits<double>::max();
 
@@ -62,7 +64,7 @@ void SampleNode::update_target_velocity(const Trajectory & msg)
   target_velocity_ = msg.points[closest_point_index_].longitudinal_velocity_mps;
 };
 
-double SampleNode::load_parameters(const std::string & param_file, const std::string & param_tag)
+double TrajectoryFollowerNode::load_parameters(const std::string & param_file, const std::string & param_tag)
 {
   std::ifstream file(param_file);
   if (!file.is_open()) {
@@ -85,14 +87,14 @@ double SampleNode::load_parameters(const std::string & param_file, const std::st
   return -1.0;
 }
 
-void SampleNode::update_current_state(const Odometry & msg)
+void TrajectoryFollowerNode::update_current_state(const Odometry & msg)
 {
   current_velocity_ = msg.twist.twist.linear.x;
   current_position_ = msg.pose.pose.position;
   current_orientation_ = msg.pose.pose.orientation;
 };
 
-void SampleNode::on_timer()
+void TrajectoryFollowerNode::on_timer()
 {
   const auto stamp = now();
 
@@ -108,12 +110,12 @@ void SampleNode::on_timer()
   pub_command_->publish(command);
 }
 
-double SampleNode::longitudinal_controller(double velocity_error)
+double TrajectoryFollowerNode::longitudinal_controller(double velocity_error)
 {
   return kp_ * velocity_error;
 }
 
-double SampleNode::lateral_controller()
+double TrajectoryFollowerNode::lateral_controller()
 {
   double min_distance = std::numeric_limits<double>::max();
   size_t lookahead_point_index = closest_point_index_;
@@ -141,7 +143,7 @@ double SampleNode::lateral_controller()
   return steering_angle;
 }
 
-double SampleNode::calculate_yaw_from_quaternion(const geometry_msgs::msg::Quaternion & q)
+double TrajectoryFollowerNode::calculate_yaw_from_quaternion(const geometry_msgs::msg::Quaternion & q)
 {
   // Convert quaternion to Euler angles
   double siny_cosp = 2 * (q.w * q.z + q.x * q.y);
@@ -156,7 +158,7 @@ double SampleNode::calculate_yaw_from_quaternion(const geometry_msgs::msg::Quate
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<autoware_practice_course::SampleNode>();
+  auto node = std::make_shared<autoware_practice_course::TrajectoryFollowerNode>();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

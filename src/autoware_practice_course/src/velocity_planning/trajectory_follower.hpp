@@ -28,10 +28,10 @@
 namespace autoware_practice_course
 {
 
-class SampleNode : public rclcpp::Node
+class TrajectoryFollowerNode : public rclcpp::Node
 {
 public:
-  SampleNode();
+  TrajectoryFollowerNode();
 
 private:
   using Trajectory = autoware_auto_planning_msgs::msg::Trajectory;

@@ -35,10 +35,10 @@ namespace autoware_practice_course
 {
 geometry_msgs::msg::Point operator+(const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Point & p2);
 
-class SampleNode : public rclcpp::Node
+class TrajectoryPlannerNode : public rclcpp::Node
 {
 public:
-  SampleNode();
+  TrajectoryPlannerNode();
 
 private:
   using Trajectory = autoware_auto_planning_msgs::msg::Trajectory;
