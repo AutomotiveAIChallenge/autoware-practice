@@ -116,10 +116,11 @@ void TrajectoryPlannerNode::on_timer()
 }
 
 void TrajectoryPlannerNode::create_trajectory()  // called by on_timer()
-                                                 //  state lattice planner
-                                                 //  create trajectory library
-  std::vector<Trajectory> trajectory_set = create_trajectory_set();
 {
+  //  state lattice planner
+  //  create trajectory library
+  std::vector<Trajectory> trajectory_set = create_trajectory_set();
+
   // create costmap
   costmap_ = create_costmap();
 
