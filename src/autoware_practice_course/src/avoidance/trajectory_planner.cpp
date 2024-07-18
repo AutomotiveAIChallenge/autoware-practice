@@ -26,14 +26,15 @@ namespace autoware_practice_course
 
 TrajectoryPlannerNode::TrajectoryPlannerNode()
 : Node("trajectory_planner"),
-  grid_resolution_(1),          // 1セルのサイズ（メートル）
-  grid_width_(100.0),           // コストマップの幅（メートル）
-  grid_height_(100.0),          // コストマップの高さ（メートル）
-  state_num_(9),                // 目標状態の数
-  target_interval_(1.0),        // 目標状態の間隔（メートル）
-  target_index_(10),            // 目標状態までのインデックス
-  num_points_(20),              // ベジエ曲線による補間を分割する点の数
-  control_point_distance_(3.0)  // ベジエ曲線の端点から制御点までの距離（メートル）
+
+  grid_resolution_(1),
+  grid_width_(100.0),
+  grid_height_(100.0),
+  state_num_(9),
+  target_interval_(1.0),
+  target_index_(10),
+  num_points_(20),
+  control_point_distance_(3.0)
 {
   using std::placeholders::_1;
 
@@ -106,7 +107,6 @@ void TrajectoryPlannerNode::on_timer()
     costmap_msg.width = grid_width_;
     costmap_msg.height = grid_height_;
 
-    // 2次元配列を1次元配列に変換
     for (const auto & row : costmap_) {
       costmap_msg.data.insert(costmap_msg.data.end(), row.begin(), row.end());
     }
@@ -117,22 +117,14 @@ void TrajectoryPlannerNode::on_timer()
 
 void TrajectoryPlannerNode::create_trajectory()  // called by on_timer()
 {
-  //  state lattice planner
-  //  create trajectory library
   std::vector<Trajectory> trajectory_set = create_trajectory_set();
-
-  // create costmap
   costmap_ = create_costmap();
-
-  // evaluate trahectories by the cost map
   best_trajectory_ = evaluate_trajectory(trajectory_set, costmap_);
 }
 
 std::vector<TrajectoryPlannerNode::Trajectory> TrajectoryPlannerNode::create_trajectory_set()
 {
-  // 目標状態集合を計算
   std::vector<TrajectoryPoint> target_trajectory_point_set = create_target_state_set();
-
   if (target_trajectory_point_set.size() < 2) {
     RCLCPP_ERROR(this->get_logger(), "Target trajectory point set size is less than 2.");
     return {};
@@ -153,16 +145,12 @@ std::vector<TrajectoryPlannerNode::Trajectory> TrajectoryPlannerNode::create_tra
   Eigen::Vector3d current_vector = quaternionToVector(current_q);
   Eigen::Vector3d target_vector = quaternionToVector(target_q);
 
-  // 車両の位置姿勢と目標状態集合をエルミート補間し、軌道を生成
+  // Interpolate vehicle pose and target state set using Hermite interpolation to generate a trajectory
   Trajectory trajectory_candidate;
   for (const auto & target_trajectory_point : target_trajectory_point_set) {
-    // 車両の位置姿勢と目標状態をベジエ曲線で補間
     std::vector<Point> interpolated_points =
       bezierInterpolate(current_position_, target_trajectory_point.pose.position, current_vector, target_vector);
-
     Trajectory trajectorys;
-
-    // 補間された曲線状のstd::vector<Point>をTrajectoryに変換
     for (const auto & interpolated_point : interpolated_points) {
       TrajectoryPoint trajectory_point;
       trajectory_point.pose.position = interpolated_point;
@@ -171,7 +159,6 @@ std::vector<TrajectoryPlannerNode::Trajectory> TrajectoryPlannerNode::create_tra
       trajectory_candidate.points.push_back(trajectory_point);
     }
 
-    // 補間された曲線状のTrajectory Pointを生成
     trajectory_set.push_back(trajectorys);
   }
   trajectory_candidate_ = trajectory_candidate;
@@ -185,7 +172,6 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlanner
     RCLCPP_ERROR(this->get_logger(), "Reference trajectory is empty.");
     return {};
   } else {
-    // 車両に最も近いtrajectory pointを取得
     double min_distance = std::numeric_limits<double>::max();
     size_t closest_waypoint_index = 0;
 
@@ -203,7 +189,7 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlanner
 
     int target_trajectory_point_index = closest_waypoint_index + target_index_;
 
-    // target_index_個先のtrajectory pointを取得
+    // Retrieve the trajectory point that is target_index_ points ahead
     autoware_auto_planning_msgs::msg::TrajectoryPoint target_trajectory_point =
       reference_trajectory_.points[target_trajectory_point_index];
 
@@ -215,13 +201,9 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlanner
     target_trajectory_point.pose.orientation.z = q.z();
     target_trajectory_point.pose.orientation.w = q.w();
 
-    // target_trajectory_pointの姿勢に直交する方向に並ぶstate_num_個の状態を生成
-    // クォータニオンを回転行列に変換
+    // Generate state_num_ states aligned in the direction orthogonal to the pose of target_trajectory_point
     Eigen::Matrix3d R = q.toRotationMatrix();
-
-    // 直交するベクトルの選択（第二列ベクトル）
     Eigen::Vector3d v = R.col(1);
-
     std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> target_state_set;
     for (int n = -state_num_ / 2; n <= (state_num_ - state_num_ / 2 - 1); ++n) {
       autoware_auto_planning_msgs::msg::TrajectoryPoint target_state = target_trajectory_point;
@@ -235,7 +217,6 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlanner
   }
 }
 
-// + 演算子のオーバーロード
 geometry_msgs::msg::Point operator+(const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Point & p2)
 {
   geometry_msgs::msg::Point result;
@@ -273,20 +254,17 @@ Eigen::Quaterniond TrajectoryPlannerNode::vectorToQuaternion(const Eigen::Vector
 std::vector<std::vector<float>> TrajectoryPlannerNode::create_costmap()
 {
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_pcl(new pcl::PointCloud<pcl::PointXYZ>());
-  // 変換関数を呼び出し
   pcl::fromROSMsg(pointcloud_, *pointcloud_pcl);
-  // pointcloud_を元にcostmapを生成
 
   std::vector<std::vector<float>> costmap(grid_width_, std::vector<float>(grid_height_, 0.0));
-
-  // 点群をグリッドマップに変換
   for (const auto & point : pointcloud_pcl->points) {
     int x_index = static_cast<int>(point.x / grid_resolution_);
     int y_index = static_cast<int>((point.y + grid_width_ / 2) / grid_resolution_);
-    const int KERNEL_SIZE = 1;            // 評価関数を設定する範囲（カーネルサイズ）
-    const float SURROUNDING_COST = 50.0;  // 周囲の格子の評価値
+    const int KERNEL_SIZE = 1;
+    const float SURROUNDING_COST = 50.0;
     if (x_index >= 0 && x_index < grid_width_ && y_index >= 0 && y_index < grid_height_) {
-      costmap[x_index][y_index] += 100.0;  // 点が存在する格子は評価関数を高く設定
+      costmap[x_index][y_index] += 100.0;
+
       for (int x = x_index - KERNEL_SIZE; x <= x_index + KERNEL_SIZE; ++x) {
         for (int y = y_index - KERNEL_SIZE; y <= y_index + KERNEL_SIZE; ++y) {
           if (x >= 0 && x < grid_width_ && y >= 0 && y < grid_height_) {
@@ -297,7 +275,7 @@ std::vector<std::vector<float>> TrajectoryPlannerNode::create_costmap()
     }
   }
 
-  const float REFERENCE_TRAJECTORY_COST = -1;  // reference_trajectoryの格子の評価値
+  const float REFERENCE_TRAJECTORY_COST = -1;
   for (const auto & point : reference_trajectory_.points) {
     int x_index = static_cast<int>(point.pose.position.x / grid_resolution_);
     int y_index = static_cast<int>((point.pose.position.y + grid_width_ / 2) / grid_resolution_);
@@ -318,9 +296,7 @@ TrajectoryPlannerNode::Trajectory TrajectoryPlannerNode::evaluate_trajectory(
   std::vector<float> trajectory_cost(trajectory_set.size(), 0.0f);
   size_t index = 0;
 
-  // trajectory_setをcostmapで評価し、最適な軌道を選択
   for (const auto & trajectory_candidate : trajectory_set) {
-    // trajectoryをcostmapで評価
     for (const auto & trajectory_point : trajectory_candidate.points) {
       int x_index = static_cast<int>(trajectory_point.pose.position.x / grid_resolution_);
       int y_index = static_cast<int>((trajectory_point.pose.position.y + grid_width_ / 2) / grid_resolution_);
@@ -336,7 +312,6 @@ TrajectoryPlannerNode::Trajectory TrajectoryPlannerNode::evaluate_trajectory(
     index++;
   }
 
-  // 最小コストのインデックスを出力
   int min_index =
     std::distance(trajectory_cost.begin(), std::min_element(trajectory_cost.begin(), trajectory_cost.end()));
   best_trajectory = trajectory_set[min_index];
@@ -356,7 +331,6 @@ Eigen::Vector3d TrajectoryPlannerNode::quaternionToVector(Eigen::Quaterniond q)
   Eigen::Vector3d directionVector = q * unitVector;
   return directionVector;
 }
-// ベジエ曲線で補間する関数
 std::vector<geometry_msgs::msg::Point> TrajectoryPlannerNode::bezierInterpolate(
   const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1, Eigen::Vector3d m0, Eigen::Vector3d m1)
 {
@@ -365,7 +339,6 @@ std::vector<geometry_msgs::msg::Point> TrajectoryPlannerNode::bezierInterpolate(
   Eigen::Vector3d v0 = pointToVector3d(p0);
   Eigen::Vector3d v1 = pointToVector3d(p1);
 
-  // Control points
   Eigen::Vector3d c0 = v0;
   Eigen::Vector3d c1 = v0 + m0 * control_point_distance_;
   Eigen::Vector3d c2 = v1 - m1 * control_point_distance_;
