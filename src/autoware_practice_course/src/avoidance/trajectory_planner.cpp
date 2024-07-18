@@ -26,34 +26,34 @@ namespace autoware_practice_course
 
 TrajectoryPlannerNode::TrajectoryPlannerNode()
 : Node("trajectory_planner"),
-  GRID_RESOLUTION_(1),          // 1セルのサイズ（メートル）
-  GRID_WIDTH_(100.0),           // コストマップの幅（メートル）
-  GRID_HEIGHT_(100.0),          // コストマップの高さ（メートル）
-  STATE_NUM_(9),                // 目標状態の数
-  TARGET_INTERVAL_(1.0),        // 目標状態の間隔（メートル）
-  TARGET_INDEX_(10),            // 目標状態までのインデックス
-  NUM_POINTS_(20),              // ベジエ曲線による補間を分割する点の数
-  CONTROL_POINT_DISTANCE_(3.0)  // ベジエ曲線の端点から制御点までの距離（メートル）
+  grid_resolution_(1),          // 1セルのサイズ（メートル）
+  grid_width_(100.0),           // コストマップの幅（メートル）
+  grid_height_(100.0),          // コストマップの高さ（メートル）
+  state_num_(9),                // 目標状態の数
+  target_interval_(1.0),        // 目標状態の間隔（メートル）
+  target_index_(10),            // 目標状態までのインデックス
+  num_points_(20),              // ベジエ曲線による補間を分割する点の数
+  control_point_distance_(3.0)  // ベジエ曲線の端点から制御点までの距離（メートル）
 {
   using std::placeholders::_1;
 
-  declare_parameter<double>("grid_resolution", GRID_RESOLUTION_);
-  declare_parameter<double>("grid_width", GRID_WIDTH_);
-  declare_parameter<double>("grid_height", GRID_HEIGHT_);
-  declare_parameter<int>("state_num", STATE_NUM_);
-  declare_parameter<double>("target_interval", TARGET_INTERVAL_);
-  declare_parameter<int>("target_index", TARGET_INDEX_);
-  declare_parameter<int>("num_points", NUM_POINTS_);
-  declare_parameter<double>("control_point_distance", CONTROL_POINT_DISTANCE_);
+  declare_parameter<double>("grid_resolution", grid_resolution_);
+  declare_parameter<double>("grid_width", grid_width_);
+  declare_parameter<double>("grid_height", grid_height_);
+  declare_parameter<int>("state_num", state_num_);
+  declare_parameter<double>("target_interval", target_interval_);
+  declare_parameter<int>("target_index", target_index_);
+  declare_parameter<int>("num_points", num_points_);
+  declare_parameter<double>("control_point_distance", control_point_distance_);
 
-  get_parameter("grid_resolution", GRID_RESOLUTION_);
-  get_parameter("grid_width", GRID_WIDTH_);
-  get_parameter("grid_height", GRID_HEIGHT_);
-  get_parameter("state_num", STATE_NUM_);
-  get_parameter("target_interval", TARGET_INTERVAL_);
-  get_parameter("target_index", TARGET_INDEX_);
-  get_parameter("num_points", NUM_POINTS_);
-  get_parameter("control_point_distance", CONTROL_POINT_DISTANCE_);
+  get_parameter("grid_resolution", grid_resolution_);
+  get_parameter("grid_width", grid_width_);
+  get_parameter("grid_height", grid_height_);
+  get_parameter("state_num", state_num_);
+  get_parameter("target_interval", target_interval_);
+  get_parameter("target_index", target_index_);
+  get_parameter("num_points", num_points_);
+  get_parameter("control_point_distance", control_point_distance_);
 
   pub_trajectory_ = create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
   pub_trajectory_candidate_ =
@@ -103,8 +103,8 @@ void TrajectoryPlannerNode::on_timer()
     pub_trajectory_->publish(best_trajectory_);
     pub_trajectory_candidate_->publish(trajectory_candidate_);
     auto costmap_msg = autoware_practice_msgs::msg::FloatGrid();
-    costmap_msg.width = GRID_WIDTH_;
-    costmap_msg.height = GRID_HEIGHT_;
+    costmap_msg.width = grid_width_;
+    costmap_msg.height = grid_height_;
 
     // 2次元配列を1次元配列に変換
     for (const auto & row : costmap_) {
@@ -201,9 +201,9 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlanner
       }
     }
 
-    int target_trajectory_point_index = closest_waypoint_index + TARGET_INDEX_;
+    int target_trajectory_point_index = closest_waypoint_index + target_index_;
 
-    // TARGET_INDEX_個先のtrajectory pointを取得
+    // target_index_個先のtrajectory pointを取得
     autoware_auto_planning_msgs::msg::TrajectoryPoint target_trajectory_point =
       reference_trajectory_.points[target_trajectory_point_index];
 
@@ -215,7 +215,7 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlanner
     target_trajectory_point.pose.orientation.z = q.z();
     target_trajectory_point.pose.orientation.w = q.w();
 
-    // target_trajectory_pointの姿勢に直交する方向に並ぶSTATE_NUM_個の状態を生成
+    // target_trajectory_pointの姿勢に直交する方向に並ぶstate_num_個の状態を生成
     // クォータニオンを回転行列に変換
     Eigen::Matrix3d R = q.toRotationMatrix();
 
@@ -223,11 +223,11 @@ std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> TrajectoryPlanner
     Eigen::Vector3d v = R.col(1);
 
     std::vector<autoware_auto_planning_msgs::msg::TrajectoryPoint> target_state_set;
-    for (int n = -STATE_NUM_ / 2; n <= (STATE_NUM_ - STATE_NUM_ / 2 - 1); ++n) {
+    for (int n = -state_num_ / 2; n <= (state_num_ - state_num_ / 2 - 1); ++n) {
       autoware_auto_planning_msgs::msg::TrajectoryPoint target_state = target_trajectory_point;
-      target_state.pose.position.x += n * TARGET_INTERVAL_ * v.x();
-      target_state.pose.position.y += n * TARGET_INTERVAL_ * v.y();
-      target_state.pose.position.z += n * TARGET_INTERVAL_ * v.z();
+      target_state.pose.position.x += n * target_interval_ * v.x();
+      target_state.pose.position.y += n * target_interval_ * v.y();
+      target_state.pose.position.z += n * target_interval_ * v.z();
       target_state_set.push_back(target_state);
     }
 
@@ -277,19 +277,19 @@ std::vector<std::vector<float>> TrajectoryPlannerNode::create_costmap()
   pcl::fromROSMsg(pointcloud_, *pointcloud_pcl);
   // pointcloud_を元にcostmapを生成
 
-  std::vector<std::vector<float>> costmap(GRID_WIDTH_, std::vector<float>(GRID_HEIGHT_, 0.0));
+  std::vector<std::vector<float>> costmap(grid_width_, std::vector<float>(grid_height_, 0.0));
 
   // 点群をグリッドマップに変換
   for (const auto & point : pointcloud_pcl->points) {
-    int x_index = static_cast<int>(point.x / GRID_RESOLUTION_);
-    int y_index = static_cast<int>((point.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
+    int x_index = static_cast<int>(point.x / grid_resolution_);
+    int y_index = static_cast<int>((point.y + grid_width_ / 2) / grid_resolution_);
     const int KERNEL_SIZE = 1;            // 評価関数を設定する範囲（カーネルサイズ）
     const float SURROUNDING_COST = 50.0;  // 周囲の格子の評価値
-    if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
+    if (x_index >= 0 && x_index < grid_width_ && y_index >= 0 && y_index < grid_height_) {
       costmap[x_index][y_index] += 100.0;  // 点が存在する格子は評価関数を高く設定
       for (int x = x_index - KERNEL_SIZE; x <= x_index + KERNEL_SIZE; ++x) {
         for (int y = y_index - KERNEL_SIZE; y <= y_index + KERNEL_SIZE; ++y) {
-          if (x >= 0 && x < GRID_WIDTH_ && y >= 0 && y < GRID_HEIGHT_) {
+          if (x >= 0 && x < grid_width_ && y >= 0 && y < grid_height_) {
             costmap[x][y] += SURROUNDING_COST;
           }
         }
@@ -299,10 +299,10 @@ std::vector<std::vector<float>> TrajectoryPlannerNode::create_costmap()
 
   const float REFERENCE_TRAJECTORY_COST = -1;  // reference_trajectoryの格子の評価値
   for (const auto & point : reference_trajectory_.points) {
-    int x_index = static_cast<int>(point.pose.position.x / GRID_RESOLUTION_);
-    int y_index = static_cast<int>((point.pose.position.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
+    int x_index = static_cast<int>(point.pose.position.x / grid_resolution_);
+    int y_index = static_cast<int>((point.pose.position.y + grid_width_ / 2) / grid_resolution_);
 
-    if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
+    if (x_index >= 0 && x_index < grid_width_ && y_index >= 0 && y_index < grid_height_) {
       costmap[x_index][y_index] += REFERENCE_TRAJECTORY_COST;
     }
   }
@@ -322,10 +322,10 @@ TrajectoryPlannerNode::Trajectory TrajectoryPlannerNode::evaluate_trajectory(
   for (const auto & trajectory_candidate : trajectory_set) {
     // trajectoryをcostmapで評価
     for (const auto & trajectory_point : trajectory_candidate.points) {
-      int x_index = static_cast<int>(trajectory_point.pose.position.x / GRID_RESOLUTION_);
-      int y_index = static_cast<int>((trajectory_point.pose.position.y + GRID_WIDTH_ / 2) / GRID_RESOLUTION_);
+      int x_index = static_cast<int>(trajectory_point.pose.position.x / grid_resolution_);
+      int y_index = static_cast<int>((trajectory_point.pose.position.y + grid_width_ / 2) / grid_resolution_);
 
-      if (x_index >= 0 && x_index < GRID_WIDTH_ && y_index >= 0 && y_index < GRID_HEIGHT_) {
+      if (x_index >= 0 && x_index < grid_width_ && y_index >= 0 && y_index < grid_height_) {
         trajectory_cost[index] += costmap[x_index][y_index];
       } else {
         RCLCPP_WARN(
@@ -367,12 +367,12 @@ std::vector<geometry_msgs::msg::Point> TrajectoryPlannerNode::bezierInterpolate(
 
   // Control points
   Eigen::Vector3d c0 = v0;
-  Eigen::Vector3d c1 = v0 + m0 * CONTROL_POINT_DISTANCE_;
-  Eigen::Vector3d c2 = v1 - m1 * CONTROL_POINT_DISTANCE_;
+  Eigen::Vector3d c1 = v0 + m0 * control_point_distance_;
+  Eigen::Vector3d c2 = v1 - m1 * control_point_distance_;
   Eigen::Vector3d c3 = v1;
 
-  for (int i = 0; i <= NUM_POINTS_; ++i) {
-    double t = static_cast<double>(i) / NUM_POINTS_;
+  for (int i = 0; i <= num_points_; ++i) {
+    double t = static_cast<double>(i) / num_points_;
     double t2 = t * t;
     double t3 = t2 * t;
     double one_minus_t = 1.0 - t;

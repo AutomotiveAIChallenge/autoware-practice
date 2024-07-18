@@ -74,14 +74,14 @@ private:
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_pointcloud_;
 
-  double GRID_RESOLUTION_;
-  double GRID_WIDTH_;              // 目標状態の間隔（メートル）
-  double GRID_HEIGHT_;             // 目標状態までのインデックス
-  int STATE_NUM_;                  // ベジエ曲線による補間を分割する点の数
-  double TARGET_INTERVAL_;         // ベジエ曲線の端点から制御点までの距離（メートル）
-  int TARGET_INDEX_;               // コストマップの幅（メートル）
-  int NUM_POINTS_;                 // コストマップの高さ（メートル）
-  double CONTROL_POINT_DISTANCE_;  // 目標状態の数
+  double grid_resolution_;         // コストマップの解像度（メートル）
+  double grid_width_;              // 目標状態の間隔（メートル）
+  double grid_height_;             // 目標状態までのインデックス
+  int state_num_;                  // ベジエ曲線による補間を分割する点の数
+  double target_interval_;         // ベジエ曲線の端点から制御点までの距離（メートル）
+  int target_index_;               // コストマップの幅（メートル）
+  int num_points_;                 // コストマップの高さ（メートル）
+  double control_point_distance_;  // 目標状態の数
 
   PointCloud2 pointcloud_;
   Point current_position_;
