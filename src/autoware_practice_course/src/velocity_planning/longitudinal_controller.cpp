@@ -61,7 +61,7 @@ void LongitudinalControllerNode::update_target_velocity(const Trajectory & msg)
 void LongitudinalControllerNode::update_current_state(const Odometry & msg)
 {
   current_velocity_ = msg.twist.twist.linear.x;
-  current_pose_ = msg.pose.pose.position;  // 現在の車両の位置を更新する
+  current_pose_ = msg.pose.pose.position;
 };
 
 void LongitudinalControllerNode::on_timer()
@@ -71,10 +71,11 @@ void LongitudinalControllerNode::on_timer()
   AckermannControlCommand command;
   command.stamp = stamp;
 
+  // The AckermannControlCommand can contain both longitudinal acceleration and velocity commands, but the vehicle
+  // interface only accepts longitudinal acceleration.
   double velocity_error = target_velocity_ - current_velocity_;
   command.longitudinal.acceleration = kp_ * velocity_error;
-  command.longitudinal.speed = target_velocity_;  // メッセージ型としてはspeedがあるが、vehiclle
-                                                  // interface側では加速度しか受け取っていない。
+  command.longitudinal.speed = target_velocity_;
 
   command.lateral.steering_tire_angle = 0.0;
 
