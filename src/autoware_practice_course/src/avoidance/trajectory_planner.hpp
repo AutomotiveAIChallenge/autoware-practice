@@ -29,10 +29,9 @@
 
 #include <vector>
 
-// フリー関数としての + 演算子のオーバーロードの宣言
-
 namespace autoware_practice_course
 {
+
 geometry_msgs::msg::Point operator+(const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Point & p2);
 
 class TrajectoryPlannerNode : public rclcpp::Node
@@ -74,14 +73,14 @@ private:
   rclcpp::Subscription<Trajectory>::SharedPtr sub_trajectory_;
   rclcpp::Subscription<PointCloud2>::SharedPtr sub_pointcloud_;
 
-  double grid_resolution_;         // コストマップの解像度（メートル）
-  double grid_width_;              // 目標状態の間隔（メートル）
-  double grid_height_;             // 目標状態までのインデックス
-  int state_num_;                  // ベジエ曲線による補間を分割する点の数
-  double target_interval_;         // ベジエ曲線の端点から制御点までの距離（メートル）
-  int target_index_;               // コストマップの幅（メートル）
-  int num_points_;                 // コストマップの高さ（メートル）
-  double control_point_distance_;  // 目標状態の数
+  double grid_resolution_;         // Resolution of the cost map (meters)
+  double grid_width_;              // Width of the cost map (meters)
+  double grid_height_;             // Height of the cost map (meters)
+  int state_num_;                  // Number of target states
+  double target_interval_;         // Intervel between target states (meters)
+  int target_index_;               // Index up to the target state
+  int num_points_;                 // Number of points for dividing Bezier interpolation
+  double control_point_distance_;  // Distance from Bezier curve endpoints to control points (meters)
 
   PointCloud2 pointcloud_;
   Point current_position_;
