@@ -33,12 +33,12 @@ TrajectoryVisualizer::TrajectoryVisualizer(const rclcpp::NodeOptions & options) 
     "/planning/scenario_planning/costmap", 10,
     std::bind(&TrajectoryVisualizer::costmapCallback, this, std::placeholders::_1));
 
-  marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/trajectory_marker", 10);
+  marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/debug/trajectory_marker", 10);
   reference_marker_pub_ =
-    this->create_publisher<visualization_msgs::msg::MarkerArray>("/reference_trajectory_marker", 10);
+    this->create_publisher<visualization_msgs::msg::MarkerArray>("/debug/reference_trajectory_marker", 10);
   candidate_marker_pub_ =
-    this->create_publisher<visualization_msgs::msg::MarkerArray>("/candidate_trajectory_marker", 10);
-  costmap_marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/costmap_marker", 10);
+    this->create_publisher<visualization_msgs::msg::MarkerArray>("/debug/candidate_trajectory_marker", 10);
+  costmap_marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/debug/costmap_marker", 10);
 }
 
 void TrajectoryVisualizer::trajectoryCallback(const autoware_auto_planning_msgs::msg::Trajectory::SharedPtr msg)
