@@ -88,7 +88,7 @@ Visualization Manager:
       Name: TrajectoryMarkers
       Namespaces: {}
       Topic:
-        Value: /trajectory_marker
+        Value: /debug/trajectory_marker
         History Policy: Keep Last
         Reliability Policy: Reliable
         Qos Overrides:
@@ -104,7 +104,7 @@ Visualization Manager:
       Name: TrajectoryMarkers
       Namespaces: {}
       Topic:
-        Value: /reference_trajectory_marker
+        Value: /debug/reference_trajectory_marker
         History Policy: Keep Last
         Reliability Policy: Reliable
         Qos Overrides:
@@ -120,7 +120,7 @@ Visualization Manager:
       Name: TrajectoryMarkers
       Namespaces: {}
       Topic:
-        Value: /candidate_trajectory_marker
+        Value: /debug/candidate_trajectory_marker
         History Policy: Keep Last
         Reliability Policy: Reliable
         Qos Overrides:
