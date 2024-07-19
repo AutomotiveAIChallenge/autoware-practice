@@ -44,6 +44,8 @@ void PControllerNode::on_timer()
   AckermannControlCommand command;
   command.stamp = stamp;
 
+  // The AckermannControlCommand can contain both longitudinal acceleration and velocity commands, but the vehicle
+  // interface only accepts longitudinal acceleration.
   double velocity_error = target_velocity_ - current_velocity_;
   command.longitudinal.acceleration = kp_ * velocity_error;
   command.longitudinal.speed = target_velocity_;

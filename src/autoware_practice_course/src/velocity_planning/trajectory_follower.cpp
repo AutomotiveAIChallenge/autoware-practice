@@ -64,6 +64,7 @@ void TrajectoryFollowerNode::update_target_velocity(const Trajectory & msg)
   target_velocity_ = msg.points[closest_point_index_].longitudinal_velocity_mps;
 };
 
+// Retrieves the value of the specified parameter from the YAML file
 double TrajectoryFollowerNode::load_parameters(const std::string & param_file, const std::string & param_tag)
 {
   std::ifstream file(param_file);
@@ -120,6 +121,7 @@ double TrajectoryFollowerNode::lateral_controller()
   double min_distance = std::numeric_limits<double>::max();
   size_t lookahead_point_index = closest_point_index_;
   min_distance = std::numeric_limits<double>::max();
+
   // Find the lookahead point
   for (size_t i = closest_point_index_; i < trajectory_.points.size(); ++i) {
     double dx = trajectory_.points[i].pose.position.x - current_position_.x;
@@ -145,7 +147,6 @@ double TrajectoryFollowerNode::lateral_controller()
 
 double TrajectoryFollowerNode::calculate_yaw_from_quaternion(const geometry_msgs::msg::Quaternion & q)
 {
-  // Convert quaternion to Euler angles
   double siny_cosp = 2 * (q.w * q.z + q.x * q.y);
   double cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
   double yaw = std::atan2(siny_cosp, cosy_cosp);
